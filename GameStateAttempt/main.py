@@ -58,9 +58,6 @@ class Level:
         self.player = player
         
     def run(self, events):
-        for event in events:
-            pass
-                 
         self.display.fill('red')
         self.player.update(events)
         
@@ -70,21 +67,37 @@ class Player(pygame.sprite.Sprite):
         self.display = display
         self.loadSpriteSheet()       
         self.animationStateManager = self.AnimationStateManager('idle')
-        self.animationIdle = self.AnimationIdle(display)
-        self.animationRun = self.AnimationRun(display)
+        self.animationIdle = self.AnimationIdle(display, self.spriteListIdle)
+        self.animationRun = self.AnimationRun(display, self.spriteListRun)
         self.animationStates = {'idle': self.animationIdle, 'run': self.animationRun}
         self.sprites = self.spriteListIdle
         self.spriteRect = self.sprites[0].get_rect(topleft = (0,0))
+        self.reverse = False
         
     def update(self, events):
         for event in events:
             if event.type == pygame.KEYDOWN:
-                if event.type == pygame.K_RIGHT:                    
+                print('key down')
+                if event.key == pygame.K_RIGHT:   
+                    print('right key down')
+                    self.animationIdle.frame = 0
+                    self.reverse = False
                     self.animationStateManager.setState('run')
-                else:
+                elif event.key == pygame.K_LEFT:
+                    self.animationIdle.frame = 0
+                    self.reverse = True
+                    self.animationStateManager.setState('run')
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_RIGHT:                    
+                    self.animationRun.frame = 0
                     self.animationStateManager.setState('idle')
+                    print('right key up')
+                if event.key == pygame.K_LEFT:                    
+                    self.animationRun.frame = 0
+                    self.animationStateManager.setState('idle')
+                    print('right key up')            
             
-        self.animationStates[self.animationStateManager.getState()].run(self.sprites, self.spriteRect)
+        self.animationStates[self.animationStateManager.getState()].run(self.spriteRect, self.reverse)
         
     def printSprites(self):
         for i in range(len(self.animationRun)):
@@ -137,38 +150,50 @@ class Player(pygame.sprite.Sprite):
             self.currentState = state
         
     class AnimationIdle:
-        def __init__(self, display):          
+        def __init__(self, display, sprites):
             self.display = display
             self.frame = 0
             self.animationCooldown = 125
             self.lastUpdate = pygame.time.get_ticks()
+            self.sprites = sprites
             
-        def run(self, sprites, rect):
+        def run(self, rect, reverse):
             currentTime = pygame.time.get_ticks()
             
             if (currentTime - self.lastUpdate >= self.animationCooldown):
                 self.frame += 1
                 self.lastUpdate = currentTime
-                if (self.frame >= len(sprites)):
+                if (self.frame >= len(self.sprites)):
                     self.frame = 0     
-            self.display.blit(sprites[self.frame], rect)
+            
+            if reverse == True:
+                reverseSprite = pygame.transform.flip(self.sprites[self.frame], True, False)
+                self.display.blit(reverseSprite, rect)
+            else:
+                self.display.blit(self.sprites[self.frame], rect)
             
     class AnimationRun:
-        def __init__(self, display):
+        def __init__(self, display, sprites):
             self.display = display
             self.frame = 0
-            self.animationCooldown = 100
+            self.animationCooldown = 125
             self.lastUpdate = pygame.time.get_ticks()
+            self.sprites = sprites
             
-        def run(self, sprites, rect):
-            currentTime = pygame.time.get_ticks
+        def run(self, rect, reverse):
+            currentTime = pygame.time.get_ticks()
             
             if (currentTime - self.lastUpdate >= self.animationCooldown):
                 self.frame += 1
                 self.lastUpdate = currentTime
-                if (self.frame >= len(sprites)):
+                if (self.frame >= len(self.sprites)):
                     self.frame = 0
-            self.display.blit(sprites[self.frame], (rect))
+                    
+            if reverse == True:
+                reverseSprite = pygame.transform.flip(self.sprites[self.frame], True, False)
+                self.display.blit(reverseSprite, rect)
+            else:
+                self.display.blit(self.sprites[self.frame], rect)
             
 if __name__ == '__main__':
     game = Game()

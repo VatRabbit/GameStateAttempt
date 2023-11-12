@@ -92,40 +92,39 @@ class Player(pygame.sprite.Sprite):
 
     def loadSpriteSheet(self):
         # 198 x 192p spritesheet with 6 collumbs and 6 rows 
-        self.sprites = []
-        self.spritesNumberWidth = 6
-        self.spritesNumberHeight = 6
-        self.spriteSheet = pygame.image.load('player/player.png').convert_alpha()
-        self.spriteSheetWidth = self.spriteSheet.get_width()
-        self.spriteSheetHeight = self.spriteSheet.get_height()
-        self.spriteWidth = self.spriteSheetWidth // self.spritesNumberWidth
-        self.spriteHeight = self.spriteSheetHeight // self.spritesNumberHeight
+        sprites = []
+        spritesNumberWidth = 6
+        spritesNumberHeight = 6
+        spriteSheet = pygame.image.load('player/player.png').convert_alpha()
+        spriteSheetWidth = spriteSheet.get_width()
+        spriteSheetHeight = spriteSheet.get_height()
+        spriteWidth = spriteSheetWidth // spritesNumberWidth
+        spriteHeight = spriteSheetHeight // spritesNumberHeight
         
-        for y in range(self.spritesNumberWidth):
-            for x in range(self.spritesNumberHeight):                        
-                self.spriteX = x * self.spriteWidth
-                self.spriteY = y * self.spriteHeight                
+        for y in range(spritesNumberWidth):
+            for x in range(spritesNumberHeight):                        
+                spriteX = x * spriteWidth
+                spriteY = y * spriteHeight                
                 
-                spriteRect = pygame.Rect(self.spriteX, self.spriteY, self.spriteWidth, self.spriteHeight)
+                spriteRect = pygame.Rect(spriteX, spriteY, spriteWidth, spriteHeight)
                 
                 isBlank = True
                 for i in range(spriteRect.width):
                     for j in range(spriteRect.height):
-                        pixelColor = self.spriteSheet.get_at((spriteRect.x + i, spriteRect.y + j))
+                        pixelColor = spriteSheet.get_at((spriteRect.x + i, spriteRect.y + j))
                         if pixelColor[3] != 0: # check the alpha channel
                             isBlank = False
                             break
 
                 if not isBlank:
-                    self.sprites.append(self.spriteSheet.subsurface(spriteRect))
+                    sprites.append(spriteSheet.subsurface(spriteRect))
         
-        self.spriteListIdle   = [self.sprites[0],  self.sprites[1],  self.sprites[2],  self.sprites[3]]
-        self.spriteListRun    = [self.sprites[4],  self.sprites[5],  self.sprites[6],  self.sprites[7],
-                                 self.sprites[8],  self.sprites[9]]
-        self.spriteListClimb  = [self.sprites[10], self.sprites[11], self.sprites[12], self.sprites[13]]
-        self.spriteListCrouch = [self.sprites[14], self.sprites[15], self.sprites[16]]
-        self.spriteListDeath  = [self.sprites[17], self.sprites[18]]
-        self.spriteListJump   = [self.sprites[19], self.sprites[20]]     
+        self.spriteListIdle   = [sprites[0],  sprites[1],  sprites[2],  sprites[3]]
+        self.spriteListRun    = [sprites[4],  sprites[5],  sprites[6],  sprites[7], sprites[8],  sprites[9]]
+        self.spriteListClimb  = [sprites[10], sprites[11], sprites[12], sprites[13]]
+        self.spriteListCrouch = [sprites[14], sprites[15], sprites[16]]
+        self.spriteListDeath  = [sprites[17], sprites[18]]
+        self.spriteListJump   = [sprites[19], sprites[20]]     
         
     class AnimationStateManager:
         def __init__(self, currentState):

@@ -1,4 +1,3 @@
-import dis
 import pygame
 from sys import exit
 

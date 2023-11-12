@@ -1,8 +1,10 @@
+import dis
 import pygame
 from sys import exit
 
-SCREENWIDTH, SCREENHEIGHT = 800, 600  
+SCREENWIDTH, SCREENHEIGHT = 400, 400  
 FPS = 60
+DISPLAY_SCALE = 2
 
 class Game:
     def __init__(self):
@@ -19,11 +21,13 @@ class Game:
         while True:   
             self.events = pygame.event.get() 
             for event in self.events:
-                if event == pygame.QUIT:
+                if event.type == pygame.QUIT:
                     pygame.quit()
                     exit()
             self.display.fill('black')
-            self.states[self.gameStateManager.getState()].run(self.events)            
+            self.states[self.gameStateManager.getState()].run(self.events) 
+            scaledDisplay = pygame.transform.scale(self.display, (self.display.get_width() * DISPLAY_SCALE, self.display.get_height() * DISPLAY_SCALE))
+            self.display.blit(scaledDisplay, (0,0))
             pygame.display.update()
             self.clock.tick(FPS)
     
@@ -65,19 +69,23 @@ class Player(pygame.sprite.Sprite):
     def __init__(self, display):
         super().__init__()
         self.display = display
-        self.sprites = []
-        self.loadSpriteSheet() 
-        self.frame = 0
-        self.lastUpdate = pygame.time.get_ticks()
-        self.animationCooldown = 100
-        #self.animationStates = {'idle': pass, 'run': pass}
-        self.animationState = 'idle'
+        self.loadSpriteSheet()       
+        self.animationStateManager = self.AnimationStateManager('idle')
+        self.animationIdle = self.AnimationIdle(display)
+        self.animationRun = self.AnimationRun(display)
+        self.animationStates = {'idle': self.animationIdle, 'run': self.animationRun}
+        self.sprites = self.spriteListIdle
+        self.spriteRect = self.sprites[0].get_rect(topleft = (0,0))
         
     def update(self, events):
-        # scaledSprite = pygame.transform.scale(self.animationIdle[0], (self.animationIdle[0].get_width() * 2, self.animationIdle[0].get_height() * 2))
-        # self.display.blit(scaledSprite, (100, 100))
-        # self.printSprites()
-        self.animate(events)
+        for event in events:
+            if event.type == pygame.KEYDOWN:
+                if event.type == pygame.K_RIGHT:                    
+                    self.animationStateManager.setState('run')
+                else:
+                    self.animationStateManager.setState('idle')
+            
+        self.animationStates[self.animationStateManager.getState()].run(self.sprites, self.spriteRect)
         
     def printSprites(self):
         for i in range(len(self.animationRun)):
@@ -85,6 +93,7 @@ class Player(pygame.sprite.Sprite):
 
     def loadSpriteSheet(self):
         # 198 x 192p spritesheet with 6 collumbs and 6 rows 
+        self.sprites = []
         self.spritesNumberWidth = 6
         self.spritesNumberHeight = 6
         self.spriteSheet = pygame.image.load('player/player.png').convert_alpha()
@@ -111,77 +120,58 @@ class Player(pygame.sprite.Sprite):
                 if not isBlank:
                     self.sprites.append(self.spriteSheet.subsurface(spriteRect))
         
-        self.animationIdle   = [self.sprites[0],  self.sprites[1],  self.sprites[2],  self.sprites[3]]
-        self.animationRun    = [self.sprites[4],  self.sprites[5],  self.sprites[6],  self.sprites[7],
-                                self.sprites[8],  self.sprites[9]]
-        self.animationClimb  = [self.sprites[10], self.sprites[11], self.sprites[12], self.sprites[13]]
-        self.animationCrouch = [self.sprites[14], self.sprites[15], self.sprites[16]]
-        self.animationDeath  = [self.sprites[17], self.sprites[18]]
-        self.animationJump   = [self.sprites[19], self.sprites[20]]
-                               
-        '''   
-        self.spriteStates = {'Idle0'  : self.sprites[0],
-                             'Idle1'  : self.sprites[1],
-                             'Idle2'  : self.sprites[2],
-                             'Idle3'  : self.sprites[3],
-                             'Run0'   : self.sprites[4],
-                             'Run1'   : self.sprites[5],
-                             'Run2'   : self.sprites[6],
-                             'Run3'   : self.sprites[7],
-                             'Run4'   : self.sprites[8],
-                             'Run5'   : self.sprites[9],
-                             'Climb0' : self.sprites[10],
-                             'Climb1' : self.sprites[11],
-                             'Climb2' : self.sprites[12],
-                             'Climb3' : self.sprites[13],
-                             'Crouch0': self.sprites[14],
-                             'Crouch1': self.sprites[15],
-                             'Crouch2': self.sprites[16],
-                             'Death0' : self.sprites[17],
-                             'Death1' : self.sprites[18],
-                             'Jump0'  : self.sprites[19],
-                             'Jump1'  : self.sprites[20]}
-
-                             
-        self.animationIdle = {'Idle0' : self.sprites[0],
-                              'Idle1' : self.sprites[1],
-                              'Idle2' : self.sprites[2],
-                              'Idle3' : self.sprites[3]}
-                
-        self.animationRun = {'Run0' : self.sprites[4],
-                             'Run1' : self.sprites[5],
-                             'Run2' : self.sprites[6],
-                             'Run3' : self.sprites[7],
-                             'Run4' : self.sprites[8],
-                             'Run5' : self.sprites[9]}
+        self.spriteListIdle   = [self.sprites[0],  self.sprites[1],  self.sprites[2],  self.sprites[3]]
+        self.spriteListRun    = [self.sprites[4],  self.sprites[5],  self.sprites[6],  self.sprites[7],
+                                 self.sprites[8],  self.sprites[9]]
+        self.spriteListClimb  = [self.sprites[10], self.sprites[11], self.sprites[12], self.sprites[13]]
+        self.spriteListCrouch = [self.sprites[14], self.sprites[15], self.sprites[16]]
+        self.spriteListDeath  = [self.sprites[17], self.sprites[18]]
+        self.spriteListJump   = [self.sprites[19], self.sprites[20]]     
         
-        self.animationClimb = {'Climb0' : self.sprites[10],
-                               'Climb1' : self.sprites[11],
-                               'Climb2' : self.sprites[12],
-                               'Climb3' : self.sprites[13]}
+    class AnimationStateManager:
+        def __init__(self, currentState):
+            self.currentState = currentState
         
-        self.animationCrouch = {'Crouch0': self.sprites[14],
-                                'Crouch1': self.sprites[15],
-                                'Crouch2': self.sprites[16]}
+        def getState(self):
+            return self.currentState
         
-        self.animationDeath = {'Death0' : self.sprites[17],
-                               'Death1' : self.sprites[18]}
+        def setState(self, state):
+            self.currentState = state
         
-        self.animationJump = {'Jump0' : self.sprites[19],
-                              'Jump1' : self.sprites[20]}
-        '''
-        
-    def animate(self, events):
-        currentTime = pygame.time.get_ticks()
-
-        if (currentTime - self.lastUpdate >= self.animationCooldown):
-            self.frame += 1
-            self.lastUpdate = currentTime
-            if (self.frame >= len(self.animationIdle)):
-                self.frame = 0                
-                
-        self.display.blit(self.animationIdle[self.frame], (100,100))
-        
+    class AnimationIdle:
+        def __init__(self, display):          
+            self.display = display
+            self.frame = 0
+            self.animationCooldown = 125
+            self.lastUpdate = pygame.time.get_ticks()
+            
+        def run(self, sprites, rect):
+            currentTime = pygame.time.get_ticks()
+            
+            if (currentTime - self.lastUpdate >= self.animationCooldown):
+                self.frame += 1
+                self.lastUpdate = currentTime
+                if (self.frame >= len(sprites)):
+                    self.frame = 0     
+            self.display.blit(sprites[self.frame], rect)
+            
+    class AnimationRun:
+        def __init__(self, display):
+            self.display = display
+            self.frame = 0
+            self.animationCooldown = 100
+            self.lastUpdate = pygame.time.get_ticks()
+            
+        def run(self, sprites, rect):
+            currentTime = pygame.time.get_ticks
+            
+            if (currentTime - self.lastUpdate >= self.animationCooldown):
+                self.frame += 1
+                self.lastUpdate = currentTime
+                if (self.frame >= len(sprites)):
+                    self.frame = 0
+            self.display.blit(sprites[self.frame], (rect))
+            
 if __name__ == '__main__':
     game = Game()
     game.mainLoop()

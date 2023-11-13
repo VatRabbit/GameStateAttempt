@@ -75,28 +75,7 @@ class Player(pygame.sprite.Sprite):
         self.reverse = False
         
     def update(self, events):
-        for event in events:
-            if event.type == pygame.KEYDOWN:
-                print('key down')
-                if event.key == pygame.K_RIGHT:   
-                    print('right key down')
-                    self.animationIdle.frame = 0
-                    self.reverse = False
-                    self.animationStateManager.setState('run')
-                elif event.key == pygame.K_LEFT:
-                    self.animationIdle.frame = 0
-                    self.reverse = True
-                    self.animationStateManager.setState('run')
-            if event.type == pygame.KEYUP:
-                if event.key == pygame.K_RIGHT:                    
-                    self.animationRun.frame = 0
-                    self.animationStateManager.setState('idle')
-                    print('right key up')
-                if event.key == pygame.K_LEFT:                    
-                    self.animationRun.frame = 0
-                    self.animationStateManager.setState('idle')
-                    print('right key up')            
-            
+        self.handleInput(events)       
         self.animationStates[self.animationStateManager.getState()].run(self.spriteRect, self.reverse)
         
     def printSprites(self):
@@ -137,8 +116,88 @@ class Player(pygame.sprite.Sprite):
         self.spriteListClimb  = [sprites[10], sprites[11], sprites[12], sprites[13]]
         self.spriteListCrouch = [sprites[14], sprites[15], sprites[16]]
         self.spriteListDeath  = [sprites[17], sprites[18]]
-        self.spriteListJump   = [sprites[19], sprites[20]]     
+        self.spriteListJump   = [sprites[19], sprites[20]]   
         
+    def handleInput(self, events):
+        keys = pygame.key.get_pressed()
+        
+        if keys[pygame.K_LEFT] == True and keys[pygame.K_RIGHT] == True:
+            self.animationStateManager.setState('idle')
+            for event in events:
+                if event.type == pygame.KEYDOWN:
+                    if event.type == pygame.K_LEFT or event.type == pygame.K_RIGHT:
+                        self.animationIdle.frame = 0
+                    
+        elif keys[pygame.K_LEFT] == True:
+            self.animationStateManager.setState('run')
+            self.reverse = True
+            for event in events:
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_LEFT:
+                        self.animationRun.frame = 0                                            
+                        
+        elif keys[pygame.K_RIGHT] == True:
+            self.animationStateManager.setState('run')
+            self.reverse = False
+            for event in events:
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_RIGHT:
+                        self.animationRun.frame = 0                        
+            
+        elif keys[pygame.K_LEFT] == False and keys[pygame.K_RIGHT] == False:
+            self.animationStateManager.setState('idle')
+            for event in events:
+                if event.type == pygame.KEYUP:
+                    if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
+                        self.animationIdle.frame = 0
+            
+        '''
+        for event in events:
+            if event.type == pygame.KEYUP:
+                print('key up')
+                
+                if event.key == pygame.K_RIGHT:
+                    print('right key up')
+                    
+                    if event.key == pygame.K_LEFT:
+                        print('left key still down')
+                        self.animationStateManager.setState('run')
+                        self.reverse = True
+                    else:
+                        print('no keys down')                        
+                        
+                if event.key == pygame.K_LEFT:
+                    print('left key up')
+                    
+                    if event.key == pygame.K_RIGHT:
+                        print('right key still down')
+                        self.animationStateManager.setState('run')
+                        self.reverse = False
+                    else:
+                        print('no keys down')
+                    
+
+            if event.type == pygame.KEYDOWN:
+                print('key down')                                
+                
+                if keys[pygame.K_LEFT] and keys[pygame.K_RIGHT]:
+                    print('both keys down')                 
+                    self.animationRun.frame = 0
+                    self.animationStateManager.setState('idle')
+                    
+                if keys[pygame.K_RIGHT]:
+                    print('right key down')
+                    self.animationIdle.frame = 0
+                    self.reverse = False
+                    self.animationStateManager.setState('run')
+                    
+                if keys[pygame.K_LEFT]:
+                    print('left key down')
+                    self.animationIdle.frame = 0
+                    self.reverse = True
+                    self.animationStateManager.setState('run')
+        '''
+                
     class AnimationStateManager:
         def __init__(self, currentState):
             self.currentState = currentState
@@ -194,7 +253,7 @@ class Player(pygame.sprite.Sprite):
                 self.display.blit(reverseSprite, rect)
             else:
                 self.display.blit(self.sprites[self.frame], rect)
-            
+               
 if __name__ == '__main__':
     game = Game()
     game.mainLoop()

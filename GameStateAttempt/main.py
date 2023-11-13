@@ -151,53 +151,6 @@ class Player(pygame.sprite.Sprite):
                     if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
                         self.animationIdle.frame = 0
             
-        '''
-        for event in events:
-            if event.type == pygame.KEYUP:
-                print('key up')
-                
-                if event.key == pygame.K_RIGHT:
-                    print('right key up')
-                    
-                    if event.key == pygame.K_LEFT:
-                        print('left key still down')
-                        self.animationStateManager.setState('run')
-                        self.reverse = True
-                    else:
-                        print('no keys down')                        
-                        
-                if event.key == pygame.K_LEFT:
-                    print('left key up')
-                    
-                    if event.key == pygame.K_RIGHT:
-                        print('right key still down')
-                        self.animationStateManager.setState('run')
-                        self.reverse = False
-                    else:
-                        print('no keys down')
-                    
-
-            if event.type == pygame.KEYDOWN:
-                print('key down')                                
-                
-                if keys[pygame.K_LEFT] and keys[pygame.K_RIGHT]:
-                    print('both keys down')                 
-                    self.animationRun.frame = 0
-                    self.animationStateManager.setState('idle')
-                    
-                if keys[pygame.K_RIGHT]:
-                    print('right key down')
-                    self.animationIdle.frame = 0
-                    self.reverse = False
-                    self.animationStateManager.setState('run')
-                    
-                if keys[pygame.K_LEFT]:
-                    print('left key down')
-                    self.animationIdle.frame = 0
-                    self.reverse = True
-                    self.animationStateManager.setState('run')
-        '''
-                
     class AnimationStateManager:
         def __init__(self, currentState):
             self.currentState = currentState

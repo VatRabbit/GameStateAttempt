@@ -16,9 +16,9 @@ class Game:
         
         self.player = Player(self.display)
         
-        self.gameStateManager = GameStateManager('menu')  
-        self.menu = Menu(self.display, self.gameStateManager)         
-        self.level = Level(self.display, self.gameStateManager, self.player)         
+        self.gameStateManager = self.GameStateManager('menu')  
+        self.menu = self.Menu(self.display, self.gameStateManager)         
+        self.level = self.Level(self.display, self.gameStateManager, self.player)         
         self.states = {'level': self.level, 'menu': self.menu}   
         
         self.dt = 0.0
@@ -46,36 +46,36 @@ class Game:
             
             self.clock.tick(FPS)
     
-class GameStateManager:
-    def __init__(self, currentState):
-        self.currentState = currentState
+    class GameStateManager:
+        def __init__(self, currentState):
+            self.currentState = currentState
     
-    def setState(self, state):
-        self.currentState = state
+        def setState(self, state):
+            self.currentState = state
         
-    def getState(self):
-        return self.currentState
+        def getState(self):
+            return self.currentState
     
-class Menu:
-    def __init__(self, display, gameStateManager):
-        self.display = display
-        self.gameStateManager = gameStateManager
+    class Menu:
+        def __init__(self, display, gameStateManager):
+            self.display = display
+            self.gameStateManager = gameStateManager
         
-    def run(self, events):        
-        self.display.fill((140, 140, 110))
-        for event in events:             
-             if event.type == pygame.KEYDOWN:
-                 self.gameStateManager.setState('level')
+        def run(self, events):        
+            self.display.fill((140, 140, 110))
+            for event in events:             
+                 if event.type == pygame.KEYDOWN:
+                     self.gameStateManager.setState('level')
         
-class Level:
-    def __init__(self, display, gameStateManager, player):
-        self.display = display
-        self.gameStateManager = gameStateManager
-        self.player = player
+    class Level:
+        def __init__(self, display, gameStateManager, player):
+            self.display = display
+            self.gameStateManager = gameStateManager
+            self.player = player
         
-    def run(self, events):
-        self.display.fill((110, 140, 140))
-        self.player.update(events)
+        def run(self, events):
+            self.display.fill((110, 140, 140))
+            self.player.update(events)
         
 class Player(pygame.sprite.Sprite):
     def __init__(self, display):

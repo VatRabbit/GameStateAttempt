@@ -1,11 +1,12 @@
 import pygame, time
 from sys import exit
 
-
-SCREEN_WIDTH, SCREEN_HEIGHT = 400, 200  
-FPS = 60
 DISPLAY_SCALE = 2
-SPEED = 100
+SCREEN_WIDTH, SCREEN_HEIGHT = 400, 200  
+SCALED_WIDTH = SCREEN_WIDTH // DISPLAY_SCALE
+SCALED_HEIGHT = SCREEN_HEIGHT // DISPLAY_SCALE
+SPEED = 125
+FPS = 60
 
 class Game:
     def __init__(self):
@@ -106,8 +107,13 @@ class Player(pygame.sprite.Sprite):
             self.display.blit(self.animationRun[i], (50*i,50))
             
     def update_player_rect(self):
-        self.spriteRect.bottomleft = (self.x,self.y)
+        if self.x < 0:
+            self.x = 0
+        elif self.x + self.spriteRect.width > SCALED_WIDTH:
+            self.x = SCALED_WIDTH - self.spriteRect.width
 
+        self.spriteRect.bottomleft = (self.x,self.y)
+           
     def loadSpriteSheet(self):
         # 198 x 192p spritesheet with 6 collumbs and 6 rows 
         sprites = []
@@ -148,7 +154,7 @@ class Player(pygame.sprite.Sprite):
         self.y += self.gravity * dt
         
         if self.y < SCREEN_HEIGHT / DISPLAY_SCALE:
-            if self.gravity < 500: # terminal velocity
+            if self.gravity < 1000: # terminal velocity
                 self.gravity += 1000 * dt   # acceleration due to gravity
             
         if self.y > SCREEN_HEIGHT / DISPLAY_SCALE:
@@ -158,11 +164,9 @@ class Player(pygame.sprite.Sprite):
         keys = pygame.key.get_pressed() 
         
         if self.y == SCREEN_HEIGHT / DISPLAY_SCALE:
-             # print('grounded')
              for event in events:
                  if event.type == pygame.KEYDOWN:
-                     if event.key == pygame.K_SPACE:
-                         print('jumping!')
+                     if event.key == pygame.K_SPACE:                         
                          self.gravity = -300                
 
         if keys[pygame.K_LEFT] == True and keys[pygame.K_RIGHT] == True:

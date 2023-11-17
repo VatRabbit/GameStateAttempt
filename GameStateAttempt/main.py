@@ -1,33 +1,48 @@
-import pygame
+import pygame, time
 from sys import exit
 
-SCREENWIDTH, SCREENHEIGHT = 400, 400  
+
+SCREEN_WIDTH, SCREEN_HEIGHT = 400, 200  
 FPS = 60
 DISPLAY_SCALE = 2
+SPEED = 100
 
 class Game:
     def __init__(self):
         pygame.init()          
-        self.display = pygame.display.set_mode((SCREENWIDTH, SCREENHEIGHT))
+        self.display = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         self.clock = pygame.time.Clock()
+        
         self.player = Player(self.display)
+        
         self.gameStateManager = GameStateManager('menu')  
         self.menu = Menu(self.display, self.gameStateManager)         
         self.level = Level(self.display, self.gameStateManager, self.player)         
         self.states = {'level': self.level, 'menu': self.menu}   
         
+        self.dt = 0.0
+        
     def mainLoop(self):
+        last_update = 0.0
+        
         while True:   
             self.events = pygame.event.get() 
             for event in self.events:
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     exit()
+                    
             self.display.fill('black')
+            
+            self.dt = time.time() - last_update
+            last_update = time.time()
+            
             self.states[self.gameStateManager.getState()].run(self.events) 
+            
             scaledDisplay = pygame.transform.scale(self.display, (self.display.get_width() * DISPLAY_SCALE, self.display.get_height() * DISPLAY_SCALE))
             self.display.blit(scaledDisplay, (0,0))
-            pygame.display.update()
+            pygame.display.update()            
+            
             self.clock.tick(FPS)
     
 class GameStateManager:
@@ -46,7 +61,7 @@ class Menu:
         self.gameStateManager = gameStateManager
         
     def run(self, events):        
-        self.display.fill('blue')
+        self.display.fill((140, 140, 110))
         for event in events:             
              if event.type == pygame.KEYDOWN:
                  self.gameStateManager.setState('level')
@@ -58,7 +73,7 @@ class Level:
         self.player = player
         
     def run(self, events):
-        self.display.fill('red')
+        self.display.fill((110, 140, 140))
         self.player.update(events)
         
 class Player(pygame.sprite.Sprite):
@@ -66,21 +81,32 @@ class Player(pygame.sprite.Sprite):
         super().__init__()
         self.display = display
         self.loadSpriteSheet()       
+        
         self.animationStateManager = self.AnimationStateManager('idle')
         self.animationIdle = self.AnimationIdle(display, self.spriteListIdle)
         self.animationRun = self.AnimationRun(display, self.spriteListRun)
-        self.animationStates = {'idle': self.animationIdle, 'run': self.animationRun}
-        self.sprites = self.spriteListIdle
-        self.spriteRect = self.sprites[0].get_rect(topleft = (0,0))
-        self.reverse = False
+        self.animationJump = self.AnimationJump(display, self.spriteListJump)
+        self.animationStates = {'idle': self.animationIdle, 'run': self.animationRun, 'jump': self.animationJump}
         
-    def update(self, events):
-        self.handleInput(events)       
+        self.sprites = self.spriteListIdle
+        self.spriteRect = self.sprites[0].get_rect(bottomleft = (20,100))
+        
+        self.reverse = False
+        self.gravity = 0     
+        self.x, self.y = 50.0 / DISPLAY_SCALE, 200.0 / DISPLAY_SCALE
+
+    def update(self, events):                  
+        self.handleInput(events, game.dt)   
+        self.apply_gravity(game.dt) 
+        self.update_player_rect() 
         self.animationStates[self.animationStateManager.getState()].run(self.spriteRect, self.reverse)
         
     def printSprites(self):
         for i in range(len(self.animationRun)):
             self.display.blit(self.animationRun[i], (50*i,50))
+            
+    def update_player_rect(self):
+        self.spriteRect.bottomleft = (self.x,self.y)
 
     def loadSpriteSheet(self):
         # 198 x 192p spritesheet with 6 collumbs and 6 rows 
@@ -116,11 +142,29 @@ class Player(pygame.sprite.Sprite):
         self.spriteListClimb  = [sprites[10], sprites[11], sprites[12], sprites[13]]
         self.spriteListCrouch = [sprites[14], sprites[15], sprites[16]]
         self.spriteListDeath  = [sprites[17], sprites[18]]
-        self.spriteListJump   = [sprites[19], sprites[20]]   
+        self.spriteListJump   = [sprites[19], sprites[20]]  
         
-    def handleInput(self, events):
-        keys = pygame.key.get_pressed()
+    def apply_gravity(self, dt):
+        self.y += self.gravity * dt
         
+        if self.y < SCREEN_HEIGHT / DISPLAY_SCALE:
+            if self.gravity < 500: # terminal velocity
+                self.gravity += 1000 * dt   # acceleration due to gravity
+            
+        if self.y > SCREEN_HEIGHT / DISPLAY_SCALE:
+            self.y = SCREEN_HEIGHT / DISPLAY_SCALE
+                
+    def handleInput(self, events, dt):
+        keys = pygame.key.get_pressed() 
+        
+        if self.y == SCREEN_HEIGHT / DISPLAY_SCALE:
+             # print('grounded')
+             for event in events:
+                 if event.type == pygame.KEYDOWN:
+                     if event.key == pygame.K_SPACE:
+                         print('jumping!')
+                         self.gravity = -300                
+
         if keys[pygame.K_LEFT] == True and keys[pygame.K_RIGHT] == True:
             self.animationStateManager.setState('idle')
             for event in events:
@@ -131,6 +175,7 @@ class Player(pygame.sprite.Sprite):
         elif keys[pygame.K_LEFT] == True:
             self.animationStateManager.setState('run')
             self.reverse = True
+            self.x -= SPEED * dt
             for event in events:
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_LEFT:
@@ -139,6 +184,7 @@ class Player(pygame.sprite.Sprite):
         elif keys[pygame.K_RIGHT] == True:
             self.animationStateManager.setState('run')
             self.reverse = False
+            self.x += SPEED * dt
             for event in events:
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_RIGHT:
@@ -149,8 +195,11 @@ class Player(pygame.sprite.Sprite):
             for event in events:
                 if event.type == pygame.KEYUP:
                     if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
-                        self.animationIdle.frame = 0
-            
+                        self.animationIdle.frame = 0    
+                        
+        if self.y < SCREEN_HEIGHT / DISPLAY_SCALE:
+            self.animationStateManager.setState('jump')
+        
     class AnimationStateManager:
         def __init__(self, currentState):
             self.currentState = currentState
@@ -188,7 +237,7 @@ class Player(pygame.sprite.Sprite):
         def __init__(self, display, sprites):
             self.display = display
             self.frame = 0
-            self.animationCooldown = 125
+            self.animationCooldown = 75
             self.lastUpdate = pygame.time.get_ticks()
             self.sprites = sprites
             
@@ -205,7 +254,20 @@ class Player(pygame.sprite.Sprite):
                 reverseSprite = pygame.transform.flip(self.sprites[self.frame], True, False)
                 self.display.blit(reverseSprite, rect)
             else:
-                self.display.blit(self.sprites[self.frame], rect)
+                self.display.blit(self.sprites[self.frame], rect)   
+                
+    class AnimationJump:
+        def __init__(self, display, sprites):
+            self.display = display
+            self.sprites = sprites
+            self.frame = 0
+            
+        def run(self, rect, reverse):                    
+            if reverse == True:
+                reverseSprite = pygame.transform.flip(self.sprites[self.frame], True, False)
+                self.display.blit(reverseSprite, rect)
+            else:
+                self.display.blit(self.sprites[self.frame], rect)   
                
 if __name__ == '__main__':
     game = Game()

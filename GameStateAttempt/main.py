@@ -66,6 +66,7 @@ class Game:
         def run(self, events):            
             self.display.fill((110, 140, 140))
             pygame.draw.rect(self.display, (100,100,250), self.player.collision_rect)
+            pygame.draw.line(self.display, (100,100,250), (290,0),(290,290), 1)
             if self.platform.colliderect(self.player.rect):
                 pygame.draw.rect(self.display, (100, 200, 200), self.platform)
             else:
@@ -113,8 +114,8 @@ class Player(pygame.sprite.Sprite):
         if self.y > SCREEN_HEIGHT / DISPLAY_SCALE:
             self.y = SCREEN_HEIGHT / DISPLAY_SCALE
             
-    def handle_collisions(self, colliders):
-        for collision in colliders:
+    def handle_collisions(self, collision_list):
+        for collision in collision_list:
             pass
 
     def handle_input(self, events, dt):
@@ -204,18 +205,16 @@ class Player(pygame.sprite.Sprite):
         self.update_player_rect() 
         self.animation_states[self.animation_state_manager.get_state()].run(self.rect, self.reverse)
 
-    def update_player_rect(self):
-        print(self.x)
-        
+    def update_player_rect(self): 
         if self.x < 0:
             self.x = 0
-            print('1')
-        elif (self.x + self.collision_rect.width * DISPLAY_SCALE) > SCALED_WIDTH:
-            self.x = SCALED_WIDTH - self.collision_rect.width * DISPLAY_SCALE
-            print('2')
-            
-        self.collision_rect.bottomleft = (self.x,self.y)  
+          
+        elif self.x > SCALED_WIDTH - self.collision_rect.width:                        
+            self.x = SCALED_WIDTH - self.collision_rect.width
+                        
+        self.collision_rect.bottomleft = (self.x,self.y)
         self.rect.midbottom = self.collision_rect.midbottom
+        print(self.x)
         
     class Animation_State_Manager:
         def __init__(self, current_state):

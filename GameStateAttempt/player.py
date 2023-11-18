@@ -85,7 +85,7 @@ class Player(pygame.sprite.Sprite):
         sprites = []
         spritesNumberWidth = 6
         spritesNumberHeight = 6
-        spriteSheet = pygame.image.load('player/player.png').convert_alpha()
+        spriteSheet = pygame.image.load('GameStateAttempt/player/player.png').convert_alpha()
         spriteSheetWidth = spriteSheet.get_width()
         spriteSheetHeight = spriteSheet.get_height()
         spriteWidth = spriteSheetWidth // spritesNumberWidth

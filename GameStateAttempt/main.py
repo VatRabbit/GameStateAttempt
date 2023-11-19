@@ -67,15 +67,7 @@ class Game:
             self.player = player     
             self.player.x = 2 * TILE_SIZE
             self.player.y = 4 * TILE_SIZE            
-            ''' Wrong way :c
-            self.level_tiles = [
-                [0, 0, 0, 0, 0, 0, 0, 0],
-                [0, 0, 1, 0, 0, 0, 0, 0],
-                [0, 0, 0, 0, 0, 1, 1, 0],
-                [0, 0, 0, 0, 0, 0, 0, 0],
-                [1, 1, 1, 1, 1, 1, 1, 1]                
-            ]  
-            '''
+
             self.level_tiles = [
                 [0,0,0,0,1],
                 [0,0,0,0,1],
@@ -97,6 +89,8 @@ class Game:
             check_tile_list = self.collision_check_list()   
             # print(check_tile_list)
             self.blit_tiles()
+            for tile in check_tile_list:
+                pygame.draw.rect(self.display, (100,100,250), tile)
             self.player.update(events, dt)
             
         def create_tile_rects(self):
@@ -114,20 +108,15 @@ class Game:
         def blit_tiles(self):
             for rect in self.tile_rect_list:
                 pygame.draw.rect(self.display, (100,100,250), rect, 2) 
-                
-        def collision_check_list(self):
-            x = self.player.x / TILE_SIZE
-            y = self.player.y / TILE_SIZE
-            
-            # print(self.player.x, self.player.y)
-            
+                                
+        def collision_check_list(self):                   
             check_list = []
             
             # take in the 3x3 grid surrounding the player to check for collisions
-            for i in range(-1, 3):
+            for i in range(-1, 2):
                 for j in range(-1, 3):
-                    grid_x = int(x + i)
-                    grid_y = int(y + j)
+                    grid_x = int(self.player.x / TILE_SIZE + i)
+                    grid_y = int(self.player.y / TILE_SIZE + j - 1)
                     
                     if 0 <= grid_x < len(self.level_tiles) and 0 <= grid_y < len(self.level_tiles[0]):
                          if self.level_tiles[grid_x][grid_y] == 1:
@@ -137,7 +126,7 @@ class Game:
                               # print(rect_grid)
                         
             print(grid_x, grid_y)
-            print(check_list)
+            # print(check_list)
             return check_list
                 
         def reset(self):

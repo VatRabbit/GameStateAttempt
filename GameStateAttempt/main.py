@@ -2,8 +2,7 @@ import pygame, time, player
 from sys import exit
 
 DISPLAY_SCALE = 2
-# 32 x 15 tile screen
-SCREEN_WIDTH, SCREEN_HEIGHT = 512, 320   
+SCREEN_WIDTH, SCREEN_HEIGHT = 512, 320
 SCALED_WIDTH = SCREEN_WIDTH / DISPLAY_SCALE
 SCALED_HEIGHT = SCREEN_HEIGHT / DISPLAY_SCALE
 SPEED = 125
@@ -79,19 +78,10 @@ class Game:
                 [0,0,0,0,1]
             ]
 
-            self.tile_rect_list = self.create_tile_rects()
-            
-            # print(self.level_tiles)
-            # print(self.level_tiles[][7])            
+            self.tile_rect_list = self.create_tile_rects()          
                     
         def run(self, events, dt):
-            self.display.fill((110, 140, 140))
-            check_tile_list = self.collision_check_list()   
-            # print(check_tile_list)
-            self.blit_tiles()
-            for tile in check_tile_list:
-                pygame.draw.rect(self.display, (100,100,250), tile)
-            self.player.update(events, dt)
+            self.render(events, dt, self.collision_check_list())
             
         def create_tile_rects(self):
             rect_list = []    
@@ -131,7 +121,14 @@ class Game:
                 
         def reset(self):
             pass    
-                        
+        
+        def render(self, events, dt, check_list):
+            self.display.fill((110, 140, 140))    
+            self.blit_tiles()
+            for tile in check_list:
+                pygame.draw.rect(self.display, (100,100,250), tile)
+            self.player.update(events, dt, check_list)    
+            
     class Menu:
         def __init__(self, display, game_state_manager):
             self.display = display

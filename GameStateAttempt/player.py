@@ -1,4 +1,5 @@
 
+from pickle import TRUE
 import pygame
 from main import DISPLAY_SCALE, SCREEN_HEIGHT, SPEED, SCALED_WIDTH
 
@@ -18,9 +19,10 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.sprites[0].get_rect(bottomleft = (20,100))
         self.collision_rect = pygame.Rect(0,0,10,20)
         
+        self.player_grounded = False
         self.reverse = False
         self.gravity = 0     
-        self.x, self.y = 50.0 / DISPLAY_SCALE, 300.0 / DISPLAY_SCALE
+        self.x, self.y = 0.0, 0.0        
         
     def apply_gravity(self, dt):
         self.y += self.gravity * dt
@@ -34,7 +36,7 @@ class Player(pygame.sprite.Sprite):
             
     def handle_collisions(self, collision_list):
         # get all surrounding tiles and check them for collisions
-        for collision in collision_list:
+        for rect in collision_list:
             pass
         
     def handle_input(self, events, dt):
@@ -117,10 +119,10 @@ class Player(pygame.sprite.Sprite):
         self.sprite_list_death  = [sprites[17], sprites[18]]
         self.sprite_list_jump   = [sprites[19], sprites[20]]  
 
-    def update(self, events, dt):
+    def update(self, events, dt, col_list):
         self.handle_input(events, dt)   
         self.apply_gravity(dt)
-        # self.handle_collisions() 
+        self.handle_collisions(col_list) 
         self.update_player_rect() 
         self.animation_states[self.animation_state_manager.get_state()].run(self.rect, self.reverse)
 

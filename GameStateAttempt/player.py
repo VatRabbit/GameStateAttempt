@@ -33,9 +33,10 @@ class Player(pygame.sprite.Sprite):
             self.y = SCREEN_HEIGHT / DISPLAY_SCALE
             
     def handle_collisions(self, collision_list):
+        # get all surrounding tiles and check them for collisions
         for collision in collision_list:
             pass
-
+        
     def handle_input(self, events, dt):
         keys = pygame.key.get_pressed() 
         
@@ -119,7 +120,7 @@ class Player(pygame.sprite.Sprite):
     def update(self, events, dt):
         self.handle_input(events, dt)   
         self.apply_gravity(dt)
-        # self.check_collisions() ?
+        # self.handle_collisions() 
         self.update_player_rect() 
         self.animation_states[self.animation_state_manager.get_state()].run(self.rect, self.reverse)
 
@@ -132,7 +133,7 @@ class Player(pygame.sprite.Sprite):
                         
         self.collision_rect.bottomleft = (self.x,self.y)
         self.rect.midbottom = self.collision_rect.midbottom
-        print(self.x)
+        # print(self.x)
         
     class Animation_State_Manager:
         def __init__(self, current_state):

@@ -1,7 +1,7 @@
 
 from pickle import TRUE
 import pygame
-from main import DISPLAY_SCALE, SCREEN_HEIGHT, SPEED, SCALED_WIDTH
+from main import DISPLAY_SCALE, SCREEN_HEIGHT, SPEED, SCALED_WIDTH, TILE_SIZE
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, display):
@@ -22,6 +22,7 @@ class Player(pygame.sprite.Sprite):
         self.player_grounded = False
         self.reverse = False
         self.gravity = 0     
+        # look for Spawn Tile and set player starting pos with it
         self.x, self.y = 0.0, 0.0        
         
     def apply_gravity(self, dt):
@@ -37,7 +38,15 @@ class Player(pygame.sprite.Sprite):
     def handle_collisions(self, collision_list):
         # get all surrounding tiles and check them for collisions
         for rect in collision_list:
-            pass
+            if self.rect.colliderect(rect):
+                # print('collision with ', rect)
+                # print('top', rect.top)
+                # print('bottom', rect.bottom)
+                # print(self.x, self.y)
+                tollerance = 3.0
+                if rect.top + tollerance >= self.y >= rect.top - tollerance:
+                     # print(rect.bottom, rect.y)
+                     self.y = rect.top
         
     def handle_input(self, events, dt):
         keys = pygame.key.get_pressed() 
@@ -80,6 +89,7 @@ class Player(pygame.sprite.Sprite):
                     if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
                         self.animation_idle.frame = 0    
                         
+        # check if player.grounded == False
         if self.y < SCREEN_HEIGHT / DISPLAY_SCALE:
             self.animation_state_manager.set_state('jump')
              
@@ -127,16 +137,9 @@ class Player(pygame.sprite.Sprite):
         self.animation_states[self.animation_state_manager.get_state()].run(self.rect, self.reverse)
 
     def update_player_rect(self): 
-        if self.x < 0:
-            self.x = 0
-          
-        elif self.x > SCALED_WIDTH - self.collision_rect.width:                        
-            self.x = SCALED_WIDTH - self.collision_rect.width
-                        
         self.collision_rect.bottomleft = (self.x,self.y)
         self.rect.midbottom = self.collision_rect.midbottom
-        # print(self.x)
-        
+                
     class Animation_State_Manager:
         def __init__(self, current_state):
             self.current_state = current_state

@@ -2,13 +2,12 @@ import pygame, time, player
 from sys import exit
 
 DISPLAY_SCALE = 2
-SCREEN_WIDTH, SCREEN_HEIGHT = 512, 320
+SCREEN_WIDTH, SCREEN_HEIGHT = 448, 320
 SCALED_WIDTH = SCREEN_WIDTH / DISPLAY_SCALE
 SCALED_HEIGHT = SCREEN_HEIGHT / DISPLAY_SCALE
 SPEED = 125
 FPS = 60
-# 32 x 32 pixel tiles
-TILE_SIZE = 32
+TILE_SIZE = 16
 
 class Game:
     def __init__(self):
@@ -45,8 +44,7 @@ class Game:
             
             scaled_display = pygame.transform.scale(self.display, (self.display.get_width() * DISPLAY_SCALE, self.display.get_height() * DISPLAY_SCALE))
             self.display.blit(scaled_display, (0,0))
-            pygame.display.flip()            
-            
+            pygame.display.flip()
             self.clock.tick(FPS)
     
     class Game_State_Manager:
@@ -64,18 +62,21 @@ class Game:
             self.display = display
             self.game_state_manager = game_state_manager           
             self.player = player     
-            self.player.x = 2 * TILE_SIZE
-            self.player.y = 4 * TILE_SIZE            
+            self.player.x = 0
+            self.player.y = 0          
 
+            # y then x for these
             self.level_tiles = [
-                [0,0,0,0,1],
-                [0,0,0,0,1],
-                [0,1,0,0,1],
-                [0,0,0,0,1],
-                [0,0,1,0,1],
-                [0,0,1,0,1],
-                [0,0,0,0,1],
-                [0,0,0,0,1]
+                [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                [0,0,0,0,0,0,0,0,1,1,1,1,1,0],
+                [0,0,0,0,0,0,0,0,1,1,1,1,1,0],
+                [0,0,1,1,0,0,0,0,1,1,1,1,1,0],
+                [0,0,0,0,0,0,0,0,1,1,1,1,1,0],
+                [0,0,2,0,0,0,0,0,1,1,1,1,1,0],
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1],
             ]
 
             self.tile_rect_list = self.create_tile_rects()          
@@ -90,8 +91,11 @@ class Game:
                 for y in range(len(self.level_tiles[0])):
                     if self.level_tiles[x][y] == 1:
                         # draw tile sprites here later instead of rect    
-                        rect = pygame.Rect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE)    
+                        rect = pygame.Rect(y * TILE_SIZE, x * TILE_SIZE, TILE_SIZE, TILE_SIZE)    
                         rect_list.append(rect)
+                    elif self.level_tiles[x][y] == 2:
+                        self.player.x = y * TILE_SIZE
+                        self.player.y = x * TILE_SIZE + TILE_SIZE 
                         
             return rect_list
                         
@@ -105,17 +109,16 @@ class Game:
             # take in the 3x3 grid surrounding the player to check for collisions
             for i in range(-1, 2):
                 for j in range(-1, 3):
-                    grid_x = int(self.player.x / TILE_SIZE + i)
-                    grid_y = int(self.player.y / TILE_SIZE + j - 1)
+                    grid_y = int(self.player.x / TILE_SIZE + i)
+                    grid_x = int(self.player.y / TILE_SIZE + j - 1)
                     
                     if 0 <= grid_x < len(self.level_tiles) and 0 <= grid_y < len(self.level_tiles[0]):
-                         if self.level_tiles[grid_x][grid_y] == 1:
-                              # rect_grid = pygame.Rect(grid_x, grid_y, TILE_SIZE, TILE_SIZE)    
-                              rect = pygame.Rect(grid_x * TILE_SIZE, grid_y * TILE_SIZE, TILE_SIZE, TILE_SIZE)    
+                         if self.level_tiles[grid_x][grid_y] == 1:                                
+                              rect = pygame.Rect(grid_y * TILE_SIZE, grid_x * TILE_SIZE, TILE_SIZE, TILE_SIZE)    
                               check_list.append(rect)
                               # print(rect_grid)
-                        
-            print(grid_x, grid_y)
+
+            # print(grid_x, grid_y)
             # print(check_list)
             return check_list
                 

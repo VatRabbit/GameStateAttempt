@@ -1,7 +1,5 @@
-
-from pickle import TRUE
 import pygame
-from main import DISPLAY_SCALE, SCREEN_HEIGHT, SPEED, SCALED_WIDTH, TILE_SIZE
+from main import DISPLAY_SCALE, SCALED_HEIGHT, SCREEN_HEIGHT, SPEED, SCALED_WIDTH, TILE_SIZE
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, display):
@@ -19,43 +17,79 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.sprites[0].get_rect(bottomleft = (20,100))
         self.collision_rect = pygame.Rect(0,0,10,20)
         
-        self.player_grounded = False
+        self.is_grounded = False
         self.reverse = False
         self.gravity = 0     
         # look for Spawn Tile and set player starting pos with it
-        self.x, self.y = 0.0, 0.0        
+        self.x, self.y = 0.0, 0.0  
+        self.ground_rect = pygame.Rect(0,0,0,0)
         
     def apply_gravity(self, dt):
-        self.y += self.gravity * dt
-        
-        if self.y < SCREEN_HEIGHT / DISPLAY_SCALE:
-            if self.gravity < 1000: # terminal velocity
-                self.gravity += 1000 * dt   # acceleration due to gravity
-            
-        if self.y > SCREEN_HEIGHT / DISPLAY_SCALE:
-            self.y = SCREEN_HEIGHT / DISPLAY_SCALE
+         if  self.y < SCALED_HEIGHT:         
+             if self.is_grounded == True:
+                 if self.gravity < 0:
+                    self.y += self.gravity * dt
+                    if self.gravity <  1000: # terminal velocity
+                         self.gravity += 1000 * dt   # acceleration due to gravity                       
+                 
+                 else:
+                     self.gravity = 0
+                     print('sert grav to 0')
+                 
+             else:
+                  self.y += self.gravity * dt
+                  if self.gravity < 1000: # terminal velocity
+                      self.gravity += 1000 * dt   # acceleration due to gravity
+                      
+         else:
+            self.y = SCALED_HEIGHT
+            self.is_grounded = True
             
     def handle_collisions(self, collision_list):
         # get all surrounding tiles and check them for collisions
+        tollerance = 3.0
+        
         for rect in collision_list:
-            if self.rect.colliderect(rect):
-                # print('collision with ', rect)
+            if self.collision_rect.colliderect(rect):
+                # print('collision with ', rect)                
                 # print('top', rect.top)
                 # print('bottom', rect.bottom)
-                # print(self.x, self.y)
-                tollerance = 3.0
+                # print(self.x, self.y)                
+                
                 if rect.top + tollerance >= self.y >= rect.top - tollerance:
-                     # print(rect.bottom, rect.y)
-                     self.y = rect.top
+                     self.ground_rect = rect 
+                     self.y = rect.top                     
+                     self.is_grounded = True
+                     print('y set to rect.top: ', self.y)                    
+                     print(self.ground_rect.right, self.x, self.x + self.collision_rect.width, self.ground_rect.left)
+                     
+        if self.ground_rect.right >= self.x and self.x + self.collision_rect.width <= self.ground_rect.left:
+            #if self.ground_rect.top == self.y:
+             self.is_grounded = True
+             self.y = self.ground_rect.top
+             print('grounded')
+                
+            # else:
+                # self.is_grounded = False
+            
+        else:
+            self.is_grounded = False
+                    
+        # if rect.left <= self.collision_rect.left and rect.right >= self.collision_rect.right:
+                    
+        # print(self.ground_rect)
         
     def handle_input(self, events, dt):
-        keys = pygame.key.get_pressed() 
+        keys = pygame.key.get_pressed()
         
-        if self.y == SCREEN_HEIGHT / DISPLAY_SCALE:
+        if self.is_grounded == True:
              for event in events:
                  if event.type == pygame.KEYDOWN:
-                     if event.key == pygame.K_SPACE:                         
-                         self.gravity = -400                
+                     if event.key == pygame.K_SPACE:
+                         # self.is_grounded = False
+                         # self.y -= 1
+                         self.gravity = -400
+                         print('jumping!')
 
         if keys[pygame.K_LEFT] == True and keys[pygame.K_RIGHT] == True:
             self.animation_state_manager.set_state('idle')
@@ -89,8 +123,7 @@ class Player(pygame.sprite.Sprite):
                     if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
                         self.animation_idle.frame = 0    
                         
-        # check if player.grounded == False
-        if self.y < SCREEN_HEIGHT / DISPLAY_SCALE:
+        if self.is_grounded == False:        
             self.animation_state_manager.set_state('jump')
              
     def load_sprite_sheet(self):
@@ -130,10 +163,12 @@ class Player(pygame.sprite.Sprite):
         self.sprite_list_jump   = [sprites[19], sprites[20]]  
 
     def update(self, events, dt, col_list):
-        self.handle_input(events, dt)   
-        self.apply_gravity(dt)
+        self.handle_input(events, dt)           
         self.handle_collisions(col_list) 
-        self.update_player_rect() 
+        self.apply_gravity(dt)
+        self.update_player_rect()         
+        
+    def render(self):
         self.animation_states[self.animation_state_manager.get_state()].run(self.rect, self.reverse)
 
     def update_player_rect(self): 

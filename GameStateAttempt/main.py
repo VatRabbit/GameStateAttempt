@@ -63,7 +63,8 @@ class Game:
             self.game_state_manager = game_state_manager           
             self.player = player     
             self.player.x = 0
-            self.player.y = 0          
+            self.player.y = 0
+            self.collision_check_list = []
 
             # y then x for these
             self.level_tiles = [
@@ -82,7 +83,10 @@ class Game:
             self.tile_rect_list = self.create_tile_rects()          
                     
         def run(self, events, dt):
-            self.render(events, dt, self.collision_check_list())
+            self.collision_check_list = self.check_collisions()               
+            self.player.update(events, dt, self.collision_check_list)
+            self.render(events, dt, self.collision_check_list)                        
+            self.player.render()
             
         def create_tile_rects(self):
             rect_list = []    
@@ -93,6 +97,7 @@ class Game:
                         # draw tile sprites here later instead of rect    
                         rect = pygame.Rect(y * TILE_SIZE, x * TILE_SIZE, TILE_SIZE, TILE_SIZE)    
                         rect_list.append(rect)
+                    # check for a spawn tile while we're at it :3
                     elif self.level_tiles[x][y] == 2:
                         self.player.x = y * TILE_SIZE
                         self.player.y = x * TILE_SIZE + TILE_SIZE 
@@ -103,7 +108,7 @@ class Game:
             for rect in self.tile_rect_list:
                 pygame.draw.rect(self.display, (100,100,250), rect, 2) 
                                 
-        def collision_check_list(self):                   
+        def check_collisions(self):                   
             check_list = []
             
             # take in the 3x3 grid surrounding the player to check for collisions
@@ -129,8 +134,7 @@ class Game:
             self.display.fill((110, 140, 140))    
             self.blit_tiles()
             for tile in check_list:
-                pygame.draw.rect(self.display, (100,100,250), tile)
-            self.player.update(events, dt, check_list)    
+                pygame.draw.rect(self.display, (100,100,250), tile)             
             
     class Menu:
         def __init__(self, display, game_state_manager):

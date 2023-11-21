@@ -1,6 +1,10 @@
 import pygame
 from main import DISPLAY_SCALE, SCALED_HEIGHT, SCREEN_HEIGHT, SPEED, SCALED_WIDTH, TILE_SIZE
 
+TERMINAL_VELOCITY = 250
+G_ACCELERATION = 1500
+JUMP = -500
+
 class Player(pygame.sprite.Sprite):
     def __init__(self, display):
         super().__init__()
@@ -21,63 +25,87 @@ class Player(pygame.sprite.Sprite):
         self.reverse = False
         self.gravity = 0     
         # look for Spawn Tile and set player starting pos with it
+        self.velocity = [0,0]
         self.x, self.y = 0.0, 0.0  
         self.ground_rect = pygame.Rect(0,0,0,0)
         
+        # add air timer
+        self.air_timer = 0.0
+
+    def air_timer(self):
+        if self.grounded == False:
+            self.air_timer += 0.0        
+        
     def apply_gravity(self, dt):
-         if  self.y < SCALED_HEIGHT:         
-             if self.is_grounded == True:
+         if self.is_grounded and self.gravity > 0:
+             self.gravity = 0             
+         else:
+             self.gravity += G_ACCELERATION * dt
+        
+         if self.y < SCALED_HEIGHT:      
+             # allow for jumping if grounded and -acceleration
+             if self.is_grounded == True or self.y == SCALED_HEIGHT:
                  if self.gravity < 0:
                     self.y += self.gravity * dt
-                    if self.gravity <  1000: # terminal velocity
-                         self.gravity += 1000 * dt   # acceleration due to gravity                       
-                 
-                 else:
-                     self.gravity = 0
-                     print('sert grav to 0')
-                 
+                    if self.gravity <=  TERMINAL_VELOCITY: # terminal velocity
+                         self.gravity += G_ACCELERATION * dt   # acceleration due to gravity                                
+                    else:
+                        self.gravity = TERMINAL_VELOCITY                        
+                                  
              else:
                   self.y += self.gravity * dt
-                  if self.gravity < 1000: # terminal velocity
-                      self.gravity += 1000 * dt   # acceleration due to gravity
+                  if self.gravity <  TERMINAL_VELOCITY: # terminal velocity
+                         self.gravity += G_ACCELERATION * dt   # acceleration due to gravity  
                       
          else:
             self.y = SCALED_HEIGHT
             self.is_grounded = True
+            # self.gravity = 0
+            
+         if self.gravity > TERMINAL_VELOCITY:
+             self.gravity = TERMINAL_VELOCITY
+             
+         print(self.gravity)
             
     def handle_collisions(self, collision_list):
         # get all surrounding tiles and check them for collisions
-        tollerance = 3.0
+        y_tollerance = 5.0
+        x_tollerance = 0.0
         
         for rect in collision_list:
             if self.collision_rect.colliderect(rect):
-                # print('collision with ', rect)                
-                # print('top', rect.top)
-                # print('bottom', rect.bottom)
-                # print(self.x, self.y)                
-                
-                if rect.top + tollerance >= self.y >= rect.top - tollerance:
+                if rect.top + y_tollerance >= self.y >= rect.top - y_tollerance:
                      self.ground_rect = rect 
                      self.y = rect.top                     
-                     self.is_grounded = True
+                     self.is_grounded = True                     
+                     # print('grounded')
                      print('y set to rect.top: ', self.y)                    
                      print(self.ground_rect.right, self.x, self.x + self.collision_rect.width, self.ground_rect.left)
                      
-        if self.ground_rect.right >= self.x and self.x + self.collision_rect.width <= self.ground_rect.left:
-            #if self.ground_rect.top == self.y:
-             self.is_grounded = True
-             self.y = self.ground_rect.top
-             print('grounded')
-                
-            # else:
-                # self.is_grounded = False
-            
+        if (
+            self.is_grounded
+            and self.ground_rect.right >= self.x
+            and self.x + self.collision_rect.width >= self.ground_rect.left
+            and self.ground_rect.top + x_tollerance >= self.y >= self.ground_rect.top - x_tollerance
+        ):
+            self.is_grounded = True
+            self.y = self.ground_rect.top
+            # print('grounded')
         else:
             self.is_grounded = False
-                    
-        # if rect.left <= self.collision_rect.left and rect.right >= self.collision_rect.right:
-                    
-        # print(self.ground_rect)
+
+    def update(self, events, dt, col_list):
+        self.handle_input(events, dt) 
+        self.apply_gravity(dt)          
+        self.handle_collisions(col_list)         
+        self.update_player_rect() 
+        
+    def render(self):
+        self.animation_states[self.animation_state_manager.get_state()].run(self.rect, self.reverse)
+
+    def update_player_rect(self): 
+        self.collision_rect.bottomleft = (self.x,self.y)
+        self.rect.midbottom = self.collision_rect.midbottom
         
     def handle_input(self, events, dt):
         keys = pygame.key.get_pressed()
@@ -88,7 +116,7 @@ class Player(pygame.sprite.Sprite):
                      if event.key == pygame.K_SPACE:
                          # self.is_grounded = False
                          # self.y -= 1
-                         self.gravity = -400
+                         self.gravity = JUMP
                          print('jumping!')
 
         if keys[pygame.K_LEFT] == True and keys[pygame.K_RIGHT] == True:
@@ -124,8 +152,8 @@ class Player(pygame.sprite.Sprite):
                         self.animation_idle.frame = 0    
                         
         if self.is_grounded == False:        
-            self.animation_state_manager.set_state('jump')
-             
+            self.animation_state_manager.set_state('jump')   
+            
     def load_sprite_sheet(self):
         # 198 x 192p spritesheet with 6 collumbs and 6 rows 
         sprites = []
@@ -161,19 +189,6 @@ class Player(pygame.sprite.Sprite):
         self.sprite_list_crouch = [sprites[14], sprites[15], sprites[16]]
         self.sprite_list_death  = [sprites[17], sprites[18]]
         self.sprite_list_jump   = [sprites[19], sprites[20]]  
-
-    def update(self, events, dt, col_list):
-        self.handle_input(events, dt)           
-        self.handle_collisions(col_list) 
-        self.apply_gravity(dt)
-        self.update_player_rect()         
-        
-    def render(self):
-        self.animation_states[self.animation_state_manager.get_state()].run(self.rect, self.reverse)
-
-    def update_player_rect(self): 
-        self.collision_rect.bottomleft = (self.x,self.y)
-        self.rect.midbottom = self.collision_rect.midbottom
                 
     class Animation_State_Manager:
         def __init__(self, current_state):

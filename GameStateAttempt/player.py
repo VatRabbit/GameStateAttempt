@@ -1,7 +1,7 @@
 import pygame
 from main import DISPLAY_SCALE, SCALED_HEIGHT, SCREEN_HEIGHT, SCALED_WIDTH, TILE_SIZE
 
-TERMINAL_VELOCITY = 100
+TERMINAL_VELOCITY = 20
 G_ACCELERATION = 20
 JUMP = -7
 SPEED = 150
@@ -21,15 +21,11 @@ class Player(pygame.sprite.Sprite):
         self.sprites = self.sprite_list_idle
         self.rect = self.sprites[0].get_rect(bottomleft = (20,100))
         self.collision_rect = pygame.Rect(0,0,10,20)
-        
-        self.is_grounded = False
+
         self.reverse = False
-        self.gravity = 0     
-        # 0 = left/right, 1 = up/down       
+        # 0 = left/right, 1 = up/down
         self.velocity = [0,0]
-        self.x, self.y = 0.0, 0.0  
-        self.ground_rect = pygame.Rect(0,0,0,0)
-        
+        self.x, self.y = 0.0, 0.0        
         # add air timer
         self.air_timer = 0.0
 
@@ -38,45 +34,73 @@ class Player(pygame.sprite.Sprite):
             self.air_timer += 0.0        
         
     def apply_gravity(self, dt):   
+        if self.velocity[1] < 0:
+            pass
+
         if self.y < SCALED_HEIGHT:
             self.velocity[1] += G_ACCELERATION * dt
             if self.velocity[1] > TERMINAL_VELOCITY:
                 self.velocity[1] = TERMINAL_VELOCITY
-            print(self.gravity)
+            # print(self.velocity[1])
         
         else:
             self.velocity[1] = 0
             self.y = SCALED_HEIGHT
             
-    def handle_x_collisions(self, collision_list):                
+    def handle_x_collisions(self, collision_list):
+        # tolerance = 2.0
+        
         for rect in collision_list:
-            if self.collision_rect.colliderect(rect):
-                pass    
-            
+            if rect.colliderect(self.collision_rect):
+                if self.velocity[0] > 0:
+                    print('collision right')                    
+                    self.x = rect.left - self.collision_rect.width
+                
+                elif self.velocity[0] < 0:
+                    print('collision left')                    
+                    self.x = rect.right
+                                
     def handle_y_collisions(self, collision_list):                
+        tolerance = 5.0
+        
         for rect in collision_list:
-            if self.collision_rect.colliderect(rect):
-                pass    
+            if rect.colliderect(self.collision_rect):
+                if self.velocity[1] > 0:
+                    print('collision bot')
+                    self.y = rect.top
+                    
+                elif self.velocity[1] < 0:
+                    print('collision top')
+                    self.y = rect.bottom + self.collision_rect.height
+                    self.velocity[1] = 0
                 
     def update(self, events, dt, col_list):
         self.handle_input(events, dt)
-        self.update_velocity()
-        print(self.velocity[0], self.velocity[1])
+        
         # handle self.x, left/right movement and check left/right collisions 
-        self.apply_gravity(dt)
+        self.update_x_velocity()
+        self.handle_x_collisions(col_list)
+        
         # handle self.y, up/down movement and check for up/down collisions
-        # self.handle_collisions(col_list)        
+        self.apply_gravity(dt)
+        self.update_y_velocity()
+        self.handle_y_collisions(col_list)        
+        
         self.update_player_rect() 
         
     def render(self):
         self.animation_states[self.animation_state_manager.get_state()].run(self.rect, self.reverse)
         
-    def update_velocity(self):
+    def update_x_velocity(self):
         self.x += self.velocity[0]
+        self.collision_rect.x = self.x
+        
+    def update_y_velocity(self):        
         self.y += self.velocity[1]
+        self.collision_rect.x = self.y
 
-    def update_player_rect(self): 
-        self.collision_rect.bottomleft = (self.x,self.y)
+    def update_player_rect(self):
+        self.collision_rect.bottomleft = self.x, self.y
         self.rect.midbottom = self.collision_rect.midbottom
         
     def handle_input(self, events, dt):

@@ -71,11 +71,11 @@ class Game:
                 [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
                 [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
                 [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,1,1,1,1,1,0],
-                [0,0,0,0,0,0,0,0,1,1,1,1,1,0],
-                [0,0,1,1,0,0,0,0,1,1,1,1,1,0],
-                [0,0,0,0,0,0,0,0,1,1,1,1,1,0],
-                [0,0,2,0,0,0,0,0,1,1,1,1,1,0],
+                [0,0,0,0,0,0,0,0,0,0,1,1,1,0],
+                [0,0,0,0,0,0,0,0,0,0,1,1,1,0],
+                [0,0,1,1,1,0,0,0,0,1,1,1,1,0],
+                [1,0,0,0,0,0,2,0,1,1,1,1,1,0],
+                [1,0,0,0,0,0,0,0,1,1,1,1,1,0],
                 [1,1,1,1,1,1,1,1,1,1,1,1,1,1],
             ]
 
@@ -84,7 +84,7 @@ class Game:
         def run(self, events, dt):
             self.collision_check_list = self.check_collisions()               
             self.player.update(events, dt, self.collision_check_list)
-            self.render(events, dt, self.collision_check_list)                        
+            self.render(events, dt, self .collision_check_list)                        
             self.player.render()
             
         def create_tile_rects(self):

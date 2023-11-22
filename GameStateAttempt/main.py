@@ -67,14 +67,14 @@ class Game:
 
             # y then x for these
             self.level_tiles = [
-                [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                [0,0,0,0,0,0,0,0,0,0,2,0,0,0],
                 [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
                 [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
                 [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
                 [0,0,0,0,0,0,0,0,0,0,1,1,1,0],
                 [0,0,0,0,0,0,0,0,0,0,1,1,1,0],
                 [0,0,1,1,1,0,0,0,0,1,1,1,1,0],
-                [1,0,0,0,0,0,2,0,1,1,1,1,1,0],
+                [1,0,0,0,0,0,0,0,1,1,1,1,1,0],
                 [1,0,0,0,0,0,0,0,1,1,1,1,1,0],
                 [1,1,1,1,1,1,1,1,1,1,1,1,1,1],
             ]
@@ -84,7 +84,8 @@ class Game:
         def run(self, events, dt):
             self.collision_check_list = self.check_collisions()               
             self.player.update(events, dt, self.collision_check_list)
-            self.render(events, dt, self .collision_check_list)                        
+            self.render(events, dt, self .collision_check_list) 
+            self.player.collision_detected()
             self.player.render()
             
         def create_tile_rects(self):
@@ -112,7 +113,7 @@ class Game:
             
             # take in the 3x3 grid surrounding the player to check for collisions
             for i in range(-1, 2):
-                for j in range(-2, 4):
+                for j in range(-2, 3):
                     grid_y = int(self.player.x / TILE_SIZE + i)
                     grid_x = int(self.player.y / TILE_SIZE + j - 1)
                     

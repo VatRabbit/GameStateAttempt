@@ -5,7 +5,6 @@ DISPLAY_SCALE = 2
 SCREEN_WIDTH, SCREEN_HEIGHT = 448, 320
 SCALED_WIDTH = SCREEN_WIDTH / DISPLAY_SCALE
 SCALED_HEIGHT = SCREEN_HEIGHT / DISPLAY_SCALE
-SPEED = 125
 FPS = 60
 TILE_SIZE = 16
 
@@ -113,7 +112,7 @@ class Game:
             
             # take in the 3x3 grid surrounding the player to check for collisions
             for i in range(-1, 2):
-                for j in range(-1, 3):
+                for j in range(-2, 4):
                     grid_y = int(self.player.x / TILE_SIZE + i)
                     grid_x = int(self.player.y / TILE_SIZE + j - 1)
                     

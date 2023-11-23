@@ -21,7 +21,8 @@ class Player(pygame.sprite.Sprite):
         self.sprites = self.sprite_list_idle
         self.rect = self.sprites[0].get_rect(bottomleft = (20,100))
         self.collision_rect = pygame.Rect(0,0,10,20)
-
+        
+        # handles which direction the sprite should be facing during animations
         self.reverse = False
         # 0 = left/right, 1 = up/down
         self.velocity = [0,0]
@@ -42,19 +43,23 @@ class Player(pygame.sprite.Sprite):
             print(self.velocity[1])
                
     def handle_x_collisions(self, collision_list):
+        tollerance = 2.0
+        
         for rect in collision_list:
             if rect.colliderect(self.collision_rect):
-                if self.velocity[0] > 0:
-                    # print('collision right')
-                    self.collider = rect
-                    self.x = rect.left - self.collision_rect.width
-                
-                elif self.velocity[0] < 0:
-                    # print('collision left')
-                    self.collider = rect
+                # check for left collision first
+                if self.collision_rect.left - tollerance <= rect.right <= self.collision_rect.left + tollerance:
                     self.x = rect.right
-                                                    
+                    self.collision_rect.left = self.x                
+
+                # check for right collision next
+                if self.collision_rect.right + tollerance >= rect.left >= self.collision_rect.right - tollerance:
+                    self.x = rect.left - self.collision_rect.width 
+                    self.collision_rect.left = self.x
+                
     def handle_y_collisions(self, collision_list):
+        tollerance = 5.0
+        
         for rect in collision_list:
             if rect.colliderect(self.collision_rect):
                 if self.velocity[1] > 0:
@@ -92,7 +97,7 @@ class Player(pygame.sprite.Sprite):
         self.handle_y_collisions(col_list)
         # print(self.y)
         
-        print(self.velocity[1])
+        # print(self.velocity[1])
         self.update_player_rect()
         
     def render(self):
@@ -120,7 +125,7 @@ class Player(pygame.sprite.Sprite):
                  if event.type == pygame.KEYDOWN:
                      if event.key == pygame.K_SPACE:
                          self.velocity[1] = JUMP
-                         print('jumping!')
+                         # print('jumping!')
 
         if keys[pygame.K_LEFT] == True and keys[pygame.K_RIGHT] == True:
             self.animation_state_manager.set_state('idle')

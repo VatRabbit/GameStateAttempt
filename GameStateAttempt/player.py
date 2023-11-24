@@ -89,7 +89,7 @@ class Player(pygame.sprite.Sprite):
     def collision_detected(self):
         pygame.draw.rect(self.display, (250,250,50), self.collider)
 
-    def update(self, events, dt, col_list):      
+    def update(self, events, dt, col_list):
         self.handle_input(events, dt)
         
         # handle self.x, left/right movement and check left/right collisions 

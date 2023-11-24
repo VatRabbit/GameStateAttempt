@@ -1,10 +1,10 @@
 import pygame
-from main import SCALED_HEIGHT
 
 TERMINAL_VELOCITY = 5
-G_ACCELERATION = 20
-JUMP = -8
+G_ACCELERATION = 15
+JUMP = -6
 SPEED = 100
+COYOTE_LIMIT = 0.1
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, display):
@@ -24,25 +24,29 @@ class Player(pygame.sprite.Sprite):
         
         # handles which direction the sprite should be facing during animations
         self.reverse = False
-        # 0 = left/right, 1 = up/down
+        # velocity[0] = left/right, velocity[1] = up/down
         self.velocity = [0,0]
         self.x, self.y = 0.0, 0.0        
         # add coyote time eventually
         self.coyote_time = 0.0
-        self.collider = pygame.Rect(0,0,0,0)
+        # self.collider = pygame.Rect(0,0,0,0)
         self.is_grounded = False   
         self.last_y = 0.0
         
     def check_grounded(self):
         if self.y == self.last_y:
             self.is_grounded = True
+            # self.velocity[1] = 0.0
         else:
             self.is_grounded = False
         self.last_y = self.y
+        print(self.velocity[1])
 
-    def air_timer(self):
-        if self.grounded == False:
-            self.air_timer += 0.0        
+    def coyote_counter(self, dt):
+        if self.is_grounded == False:
+            self.coyote_time += dt     
+        else:
+            self.coyote_time = 0.0
         
     def apply_gravity(self, dt):
          self.velocity[1] += G_ACCELERATION * dt
@@ -67,7 +71,7 @@ class Player(pygame.sprite.Sprite):
                 
     def handle_y_collisions(self, collision_list):
         # max of 8
-        tollerance = 8
+        tollerance = 6
         
         for rect in collision_list:
             if rect.colliderect(self.collision_rect):                                
@@ -96,6 +100,7 @@ class Player(pygame.sprite.Sprite):
         self.handle_y_collisions(col_list)
                 
         self.check_grounded()
+        self.coyote_counter(dt)
         self.update_player_rect()
         
     def render(self):
@@ -116,7 +121,7 @@ class Player(pygame.sprite.Sprite):
     def handle_input(self, events, dt):
         keys = pygame.key.get_pressed()        
 
-        if self.is_grounded:
+        if self.is_grounded or self.coyote_time <= COYOTE_LIMIT:
              for event in events:
                  if event.type == pygame.KEYDOWN:
                      if event.key == pygame.K_SPACE:

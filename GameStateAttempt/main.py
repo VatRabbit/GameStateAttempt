@@ -85,9 +85,8 @@ class Game:
             self.collision_check_list = self.check_collisions()               
             self.player.update(events, dt, self.collision_check_list)
             self.render(events, dt, self .collision_check_list) 
-            self.player.collision_detected()
+            # self.player.collision_detected()
             self.player.render()
-            # print(dt)
             
         def create_tile_rects(self):
             rect_list = []    
@@ -114,7 +113,7 @@ class Game:
             
             # take in the 3x3 grid surrounding the player to check for collisions
             for i in range(-1, 2):
-                for j in range(-3, 5):
+                for j in range(-2, 3):
                     grid_y = int(self.player.x / TILE_SIZE + i)
                     grid_x = int(self.player.y / TILE_SIZE + j - 1)
                     
@@ -122,10 +121,7 @@ class Game:
                          if self.level_tiles[grid_x][grid_y] == 1:                                
                               rect = pygame.Rect(grid_y * TILE_SIZE, grid_x * TILE_SIZE, TILE_SIZE, TILE_SIZE)    
                               check_list.append(rect)
-                              # print(rect_grid)
 
-            # print(grid_x, grid_y)
-            # print(check_list)
             return check_list
                 
         def reset(self):

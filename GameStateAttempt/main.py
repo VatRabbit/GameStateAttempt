@@ -18,23 +18,22 @@ TILE_SIZE = 16
 
 class Game:
     def __init__(self):
-        pygame.init()          
+        pygame.init()
         self.display = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         self.clock = pygame.time.Clock()
         pygame.display.set_caption('Crappy Game')
-        
+        self.dt = 0.0
+               
+        self.camera = self.Camera()
         self.player = player.Player(self.display)
         
         self.game_state_manager = self.Game_State_Manager('menu')  
-        self.menu = self.Menu(self.display, self.game_state_manager)         
-        self.level = self.Level(self.display, self.game_state_manager, self.player)         
-        self.states = {'level': self.level, 'menu': self.menu}   
-        
-        self.dt = 0.0
+        self.menu = self.Menu(self.display, self.game_state_manager, self.camera)         
+        self.level = self.Level(self.display, self.game_state_manager, self.player, self.camera, self.dt)         
+        self.states = {'level': self.level, 'menu': self.menu}           
+        self.last_update = 0.0
         
     def mainLoop(self):
-        last_update = 0.0
-        
         while True:
             self.events = pygame.event.get() 
             for event in self.events:
@@ -42,17 +41,25 @@ class Game:
                     pygame.quit()
                     exit()
                     
-            self.display.fill('black')
-            
-            self.dt = time.time() - last_update
-            last_update = time.time()
-            
-            self.states[self.game_state_manager.get_state()].run(self.events, self.dt) 
-            
-            scaled_display = pygame.transform.scale(self.display, (self.display.get_width() * DISPLAY_SCALE, self.display.get_height() * DISPLAY_SCALE))
-            self.display.blit(scaled_display, (0,0))
-            pygame.display.flip()
+            self.display.fill('black')        
+            self.timer()
+            self.states[self.game_state_manager.get_state()].run(self.events, self.dt)             
+            self.render()
             self.clock.tick(FPS)
+            
+    def timer(self):
+        self.dt = time.time() - self.last_update
+        self.last_update = time.time()
+            
+    def render(self):
+        scaled_display = pygame.transform.scale(self.display, (self.display.get_width() * DISPLAY_SCALE, self.display.get_height() * DISPLAY_SCALE))
+        self.display.blit(scaled_display, (0,0))
+        pygame.display.flip()        
+
+    class Camera:
+        def __init__(self):
+            self.x = 0.0
+            self.y = 0.0
     
     class Game_State_Manager:
         def __init__(self, current_state):
@@ -65,13 +72,15 @@ class Game:
             return self.current_state
     
     class Level:
-        def __init__(self, display, game_state_manager, player):
+        def __init__(self, display, game_state_manager, player, camera, dt):
             self.display = display
             self.game_state_manager = game_state_manager           
             self.player = player     
             self.player.x = 0
             self.player.y = 0
             self.collision_check_list = []
+            self.camera = camera
+            self.dt = dt
 
             # y then x for these
             self.level_tiles = [
@@ -90,10 +99,11 @@ class Game:
             self.tile_rect_list = self.create_tile_rects()          
                     
         def run(self, events, dt):
+            self.handle_input()
             self.collision_check_list = self.check_collisions()               
             self.player.update(events, dt, self.collision_check_list)
-            self.render(events, dt, self .collision_check_list) 
-            # self.player.collision_detected()
+            self.update_tile_rects()
+            self.render() 
             self.player.render()
             
         def create_tile_rects(self):
@@ -110,8 +120,20 @@ class Game:
                         self.player.x = y * TILE_SIZE
                         self.player.y = x * TILE_SIZE + TILE_SIZE 
                         
-            return rect_list
+            return rect_list                        
+
+        def update_tile_rects(self):
+            rect_list = []    
+        
+            for x in range(len(self.level_tiles)):
+                for y in range(len(self.level_tiles[0])):
+                    if self.level_tiles[x][y] == 1:
+                        # draw tile sprites here later instead of rect    
+                        rect = pygame.Rect(y * TILE_SIZE + self.camera.y, x * TILE_SIZE + self.camera.x, TILE_SIZE, TILE_SIZE)    
+                        rect_list.append(rect)                 
                         
+            return rect_list
+
         def blit_tiles(self):
             for rect in self.tile_rect_list:
                 pygame.draw.rect(self.display, (100,100,250), rect, 2) 
@@ -135,16 +157,30 @@ class Game:
         def reset(self):
             pass    
         
-        def render(self, events, dt, check_list):
+        def handle_input(self):            
+            keys = pygame.key.get_pressed()
+            
+            if keys[pygame.K_LCTRL] == True:
+                print('left ctrl down')
+                self.camera.y += 100 * self.dt
+                
+            if keys[pygame.K_LALT] == True:
+                print('left alt down')
+                self.camera.y -= 100 * self.dt
+                
+            print(self.camera.y)
+        
+        def render(self):
             self.display.fill((110, 140, 140))    
             self.blit_tiles()
-            for tile in check_list:
+            for tile in self.collision_check_list:
                 pygame.draw.rect(self.display, (100,100,250), tile)             
             
     class Menu:
-        def __init__(self, display, game_state_manager):
+        def __init__(self, display, game_state_manager, camera):
             self.display = display
             self.game_state_manager = game_state_manager
+            self.camera = camera
         
         def run(self, events, dt):
             self.display.fill((140, 140, 110))

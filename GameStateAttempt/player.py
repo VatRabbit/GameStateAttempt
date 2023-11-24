@@ -10,7 +10,7 @@ class Player(pygame.sprite.Sprite):
     def __init__(self, display):
         super().__init__()
         self.display = display
-        self.load_sprite_sheet()       
+        self.load_sprite_sheet()      
         
         self.animation_state_manager = self.Animation_State_Manager('idle')
         self.animation_idle = self.Animation_Idle(display, self.sprite_list_idle)

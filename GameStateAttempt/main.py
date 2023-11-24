@@ -1,3 +1,11 @@
+'''
+TO ADD:
+- double jump
+- scrolling level
+- camera
+- enemy
+'''
+
 import pygame, time, player
 from sys import exit
 

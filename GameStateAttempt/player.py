@@ -34,12 +34,13 @@ class Player(pygame.sprite.Sprite):
         self.last_y = 0.0
         
     def check_grounded(self, collision_list):
+        tollerance = 0.7
         self.is_grounded = False
         
         for rect in collision_list:
             if rect.colliderect(self.collision_rect) and self.velocity[1] >= 0:
                 self.is_grounded = True
-                self.velocity[1] = 0.7
+                self.velocity[1] = tollerance
                 break
 
     def coyote_counter(self, dt):
@@ -88,8 +89,7 @@ class Player(pygame.sprite.Sprite):
     def collision_detected(self):
         pygame.draw.rect(self.display, (250,250,50), self.collider)
 
-    def update(self, events, dt, col_list):
-        print(self.velocity[1])        
+    def update(self, events, dt, col_list):      
         self.handle_input(events, dt)
         
         # handle self.x, left/right movement and check left/right collisions 
@@ -128,12 +128,11 @@ class Player(pygame.sprite.Sprite):
                  if event.type == pygame.KEYDOWN:
                      if event.key == pygame.K_SPACE:
                          self.velocity[1] = JUMP
-                         # print('jumping!')
 
         if keys[pygame.K_LEFT] == True and keys[pygame.K_RIGHT] == True:
             self.animation_state_manager.set_state('idle')
             self.velocity[0] = 0
-            # print('stopped')
+
             for event in events:
                 if event.type == pygame.KEYDOWN:
                     if event.type == pygame.K_LEFT or event.type == pygame.K_RIGHT:
@@ -143,7 +142,6 @@ class Player(pygame.sprite.Sprite):
             self.animation_state_manager.set_state('run')
             self.reverse = True
             self.velocity[0] = -SPEED * dt
-            # print('moving left')
             
             for event in events:
                 if event.type == pygame.KEYDOWN:
@@ -154,7 +152,6 @@ class Player(pygame.sprite.Sprite):
             self.animation_state_manager.set_state('run')
             self.reverse = False
             self.velocity[0] = SPEED * dt
-            # print('moving right')
             
             for event in events:
                 if event.type == pygame.KEYDOWN:
@@ -164,7 +161,7 @@ class Player(pygame.sprite.Sprite):
         elif keys[pygame.K_LEFT] == False and keys[pygame.K_RIGHT] == False:
             self.animation_state_manager.set_state('idle')
             self.velocity[0] = 0
-            # print('stopped')
+            
             for event in events:
                 if event.type == pygame.KEYUP:
                     if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:

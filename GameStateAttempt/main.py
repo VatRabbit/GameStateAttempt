@@ -74,6 +74,9 @@ class Game:
             return self.y
         def add_y(self, y):
             self.y += y            
+            
+        def follow_player_x(self, x, dt):
+            self.x = x - SCALED_WIDTH / 2
     
     class Game_State_Manager:
         def __init__(self, current_state):
@@ -112,7 +115,8 @@ class Game:
             self.tile_rect_list = self.create_tile_rects()          
                     
         def run(self, events, dt):
-            self.handle_input(dt)
+            # self.handle_input(dt)
+            # self.camera.follow_player_x(self.player.x, self.dt)
             self.update_tile_rects()
             self.collision_check_list = self.check_collisions()               
             self.player.update(events, dt, self.collision_check_list)
@@ -153,7 +157,7 @@ class Game:
             
             # take in the 3x3 grid surrounding the player to check for collisions
             for i in range(-1, 2):
-                for j in range(-2, 3):
+                for j in range(-1, 3):
                     grid_y = int((self.player.x - self.camera.get_x()) / TILE_SIZE + i)
                     grid_x = int((self.player.y - self.camera.get_y()) / TILE_SIZE + j - 1)
                     

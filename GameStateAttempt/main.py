@@ -154,12 +154,12 @@ class Game:
             # take in the 3x3 grid surrounding the player to check for collisions
             for i in range(-1, 2):
                 for j in range(-2, 3):
-                    grid_y = int((self.player.x - self.camera.x) / TILE_SIZE + i)
-                    grid_x = int((self.player.y - self.camera.y) / TILE_SIZE + j - 1)
+                    grid_y = int((self.player.x - self.camera.get_x()) / TILE_SIZE + i)
+                    grid_x = int((self.player.y - self.camera.get_y()) / TILE_SIZE + j - 1)
                     
                     if 0 <= grid_x < len(self.level_tiles) and 0 <= grid_y < len(self.level_tiles[0]):
                          if self.level_tiles[grid_x][grid_y] == 1:                                
-                              rect = pygame.Rect(grid_y * TILE_SIZE, grid_x * TILE_SIZE, TILE_SIZE, TILE_SIZE)    
+                              rect = pygame.Rect(grid_y * TILE_SIZE + self.camera.get_x(), grid_x * TILE_SIZE + self.camera.get_y(), TILE_SIZE, TILE_SIZE)    
                               check_list.append(rect)
 
             return check_list

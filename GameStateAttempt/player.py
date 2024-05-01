@@ -113,7 +113,8 @@ class Player(pygame.sprite.Sprite):
                     self.y = rect.bottom + self.collision_rect.height
                     self.collision_rect.bottom = self.y       
                     self.velocity[1] = 0
-
+                    
+    # This is not being used I think. Either scrap it or redo it ig.
     def collision_detected(self):
         pygame.draw.rect(self.display, (250,250,50), self.collider)
     
@@ -190,7 +191,7 @@ class Player(pygame.sprite.Sprite):
         sprites = []
         spritesNumberWidth = 6
         spritesNumberHeight = 6
-        spriteSheet = pygame.image.load('player\player.png').convert_alpha()
+        spriteSheet = pygame.image.load('GameStateAttempt\player\player.png').convert_alpha()
         spriteSheetWidth = spriteSheet.get_width()
         spriteSheetHeight = spriteSheet.get_height()
         spriteWidth = spriteSheetWidth // spritesNumberWidth

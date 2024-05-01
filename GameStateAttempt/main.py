@@ -1,4 +1,5 @@
 '''
+
 TO ADD:
 - camera
 - enemy
@@ -7,6 +8,7 @@ TO ADD:
 
 ISSUES:
 - jumping not consistent on different frame rates
+
 '''
 
 import pygame, time, player
@@ -51,16 +53,10 @@ class Game:
                         
             self.timer()
             self.clock.tick(FPS)
-            
-            # print(self.player.velocity)
-            #print(f"Scroll X = {self.offset_x}")
-            #pause = input("PAUSED")
-            # print(self.offset_x)
-            
+           
     def timer(self):
         self.dt = time.time() - self.last_update
         self.last_update = time.time()
-        # print(self.dt)
             
     def render(self):           
         self.states[self.game_state_manager.get_state()].render()
@@ -112,15 +108,24 @@ class Game:
                     
         def run(self, events, dt):
             if self.new_state:
-                self.true_offset_x = self.player.x - SCALED_WIDTH / 2
+                self.true_offset_x = self.player.x - SCALED_WIDTH / 2 + 8
                 self.offset_x = int(self.true_offset_x)
-                # print(f"true_offset_x changed to {self.offset_x}")
                 self.new_state = False
                 
             if self.player.velocity[0] != 0:
                 self.true_offset_x += self.player.velocity[0]            
-                
-            self.offset_x = int(self.true_offset_x)
+            
+            '''
+            if self.true_offset_x - self.offset_x != 0:                 
+                 print(f"offset:      {self.offset_x}") 
+                 self.offset_x = int(self.offset_x)
+            '''
+
+            self.offset_x += (self.true_offset_x - self.offset_x) / 12
+            print(f"true_offset: {self.true_offset_x}")
+            print(f"offset:      {self.offset_x}") 
+            print(f"dt:          {dt}")
+
             self.collision_check_list = self.check_collisions()               
             self.player.update(events, dt, self.collision_check_list)
             
@@ -157,12 +162,6 @@ class Game:
 
             return check_list
         
-        # displays the tiles in range for collision checks
-        def show_collision_check_list(self):
-            for rect in self.collision_check_list:
-                rect.x -= self.offset_x
-                pygame.draw.rect(self.display, (100,100,250), rect)                 
-               
         def render(self):
             self.display.fill((110, 140, 140))    
             self.render_tiles()
@@ -172,9 +171,14 @@ class Game:
         def render_tiles(self):
             for rect in self.tile_rect_list:
                 temp = rect.copy()
-                temp.x -= self.offset_x
-                print(self.offset_x)
-                pygame.draw.rect(self.display, (100,100,250), temp, 2)
+                temp.x -= self.offset_x                
+                pygame.draw.rect(self.display, (100,100,250), temp, 2)        
+                
+        # displays the tiles in range for collision checks
+        def show_collision_check_list(self):
+            for rect in self.collision_check_list:
+                rect.x -= self.offset_x
+                pygame.draw.rect(self.display, (100,100,250), rect)  
 
         def reset(self):
             pass

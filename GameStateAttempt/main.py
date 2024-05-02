@@ -4,6 +4,7 @@ TO ADD:
 - enemy
 - jump buffer
 - variable jump height
+- more optimizion by only rendering visible tiles
 
 ISSUES:
 - jumping not consistent on different frame rates
@@ -28,7 +29,6 @@ class Game:
         pygame.display.set_caption('Crappy Platformer')
         self.display = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))        
         
-        # maybe set up a Time class?
         self.clock = pygame.time.Clock()
         self.dt = 0.0
         self.last_update = 0.0
@@ -37,8 +37,7 @@ class Game:
         self.sprite_handler.load_sprites()
 
         self.player = player.Player(self.display, self.sprite_handler.player_idle, self.sprite_handler.player_run, self.sprite_handler.player_jump)
-        # self.player.load_sprite_sheet()
-        
+                
         self.game_state_manager = self.Game_State_Manager('menu')  
         self.menu = self.Menu(self.display, self.game_state_manager)
         self.level = self.Level(self.display, self.game_state_manager, self.player, self.dt)
@@ -68,11 +67,6 @@ class Game:
         self.scaled_display = pygame.transform.scale(self.display, (self.display.get_width() * DISPLAY_SCALE, self.display.get_height() * DISPLAY_SCALE))
         self.display.blit(self.scaled_display, (0,0))
         pygame.display.flip()        
-
-    # I'll figure this out eventually...
-    class Camera:
-        def __init__(self):
-            pass
         
     class Game_State_Manager:
         def __init__(self, current_state):
@@ -111,30 +105,22 @@ class Game:
             
             self.tile_rect_list = self.create_tile_rects()          
                     
-        def run(self, events, dt):
-            '''
+        def run(self, events, dt):        
+            self.camera()
+            self.collision_check_list = self.check_collisions()               
+            self.player.update(events, dt, self.collision_check_list)
+            
+        def camera(self):                        
             if self.new_state:
-                self.true_offset_x = self.player.x - SCALED_WIDTH / 2 + 8
+                self.true_offset_x = self.player.position[0] - SCALED_WIDTH / 2 + 8
                 self.offset_x = int(self.true_offset_x)
                 self.new_state = False
                 
             if self.player.velocity[0] != 0:
                 self.true_offset_x += self.player.velocity[0]            
-            
-            '''
-            '''
-            if self.true_offset_x - self.offset_x != 0:                 
-                 print(f"offset:      {self.offset_x}") 
-                 self.offset_x = int(self.offset_x)
-            '''
 
-            # self.offset_x += (self.true_offset_x - self.offset_x + 12) / 12
-            # print(f"true_offset: {self.true_offset_x}")
-            # print(f"offset:      {self.offset_x}") 
-            # print(f"player_x:    {self.player.x}")
-
-            self.collision_check_list = self.check_collisions()               
-            self.player.update(events, dt, self.collision_check_list)
+            # set the offset for the camera. Subtract 0.5 (tiles) to center everything
+            self.offset_x += (self.true_offset_x - self.offset_x) / 12 - 0.5    
             
         def create_tile_rects(self):
             rect_list = []
@@ -148,8 +134,8 @@ class Game:
                     
                     # check for a spawn tile while we're at it :3
                     elif self.level_tiles[x][y] == 2:
-                        self.player.x = y * TILE_SIZE
-                        self.player.y = x * TILE_SIZE + TILE_SIZE 
+                        self.player.position[0] = y * TILE_SIZE
+                        self.player.position[1] = x * TILE_SIZE + TILE_SIZE 
                         
             return rect_list                    
         
@@ -159,8 +145,8 @@ class Game:
             # take in the 3x4 grid surrounding the player to check for collisions
             for i in range(-1, 2):
                 for j in range(-1, 3):
-                    grid_y = int((self.player.x) / TILE_SIZE + i)
-                    grid_x = int((self.player.y) / TILE_SIZE + j - 1)
+                    grid_y = int((self.player.position[0]) / TILE_SIZE + i)
+                    grid_x = int((self.player.position[1]) / TILE_SIZE + j - 1)
                     
                     if 0 <= grid_x < len(self.level_tiles) and 0 <= grid_y < len(self.level_tiles[0]):
                          if self.level_tiles[grid_x][grid_y] == 1:                                

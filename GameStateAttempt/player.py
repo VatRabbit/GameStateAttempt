@@ -17,21 +17,22 @@ class Player(pygame.sprite.Sprite):
         self.animation_jump = self.Animation_Jump(display, sprites_jump)
         self.animation_states = {'idle': self.animation_idle, 'run': self.animation_run, 'jump': self.animation_jump}
         
-        # self.sprites = self.sprite_list_idle
-        self.rect = pygame.Rect(0,0, 16,16)
+ 
+        self.rect = pygame.Rect(0,0, 32,32)
         self.collision_rect = pygame.Rect(0,0,10,16)
         
         # handles which direction the sprite should be facing during animations
         self.reverse = False
+        
         # velocity[0] = left/right, velocity[1] = up/down
         self.velocity = [0,0]
+        #position[0] = x axis, position[1] = y axis
         self.position = [0,0]
-        self.x, self.y = 0.0, 0.0
+        
         self.coyote_time = 0.0
         self.jump_buffer = 0.0
         self.jump_height_counter = 0.0
         self.double_jump_ready = False
-        # self.collider = pygame.Rect(0,0,0,0)
         self.is_grounded = False
         self.last_y = 0.0
         
@@ -55,11 +56,11 @@ class Player(pygame.sprite.Sprite):
     def update(self, events, dt, col_list):
         self.handle_input(events, dt)
         
-        # handle self.x, left/right movement and check left/right collisions 
+        # handle self.position[0], left/right movement and check left/right collisions 
         self.update_x_velocity()
         self.handle_x_collisions(col_list)
                 
-        # handle self.y, up/down movement and check for up/down collisions
+        # handle self.position[1], up/down movement and check for up/down collisions
         self.apply_gravity(dt)
         self.update_y_velocity()
         self.check_grounded(col_list)
@@ -74,12 +75,13 @@ class Player(pygame.sprite.Sprite):
         self.animation_states[self.animation_state_manager.get_state()].run(rect, self.reverse)
         
     def update_x_velocity(self):
-        self.x += self.velocity[0]
-        self.collision_rect.left = self.x
+        self.position[0] += self.velocity[0]
+        self.collision_rect.left = self.position[0]
+        print(f"self.collision_rect.left:{self.collision_rect.left}")
         
     def update_y_velocity(self):
-        self.y += self.velocity[1]
-        self.collision_rect.bottom = self.y
+        self.position[1] += self.velocity[1]
+        self.collision_rect.bottom = self.position[1]
         
     def handle_x_collisions(self, collision_list):
         tollerance = 10
@@ -88,14 +90,14 @@ class Player(pygame.sprite.Sprite):
             if rect.colliderect(self.collision_rect):
                 # check for left collision first
                 if self.collision_rect.left - tollerance <= rect.right <= self.collision_rect.left + tollerance:
-                    self.x = rect.right
-                    self.collision_rect.left = self.x
+                    self.position[0] = rect.right
+                    self.collision_rect.left = self.position[0]
                     self.velocity[0] = 0
 
                 # check for right collision next
                 elif self.collision_rect.right + tollerance >= rect.left >= self.collision_rect.right - tollerance:
-                    self.x = rect.left - self.collision_rect.width 
-                    self.collision_rect.left = self.x
+                    self.position[0] = rect.left - self.collision_rect.width 
+                    self.collision_rect.left = self.position[0]
                     self.velocity[0] = 0
                 
     def handle_y_collisions(self, collision_list):
@@ -105,13 +107,12 @@ class Player(pygame.sprite.Sprite):
         for rect in collision_list:
             if rect.colliderect(self.collision_rect):                                
                 if self.collision_rect.bottom + tollerance >= rect.top >= self.collision_rect.bottom - tollerance:
-                    self.y = rect.top
-                    self.collision_rect.bottom = self.y    
-                    # self.velocity[1] = 0
+                    self.position[1] = rect.top
+                    self.collision_rect.bottom = self.position[1]    
                 
                 elif self.collision_rect.top - tollerance <= rect.bottom <= self.collision_rect.top + tollerance:                    
-                    self.y = rect.bottom + self.collision_rect.height
-                    self.collision_rect.bottom = self.y       
+                    self.position[1] = rect.bottom + self.collision_rect.height
+                    self.collision_rect.bottom = self.position[1]       
                     self.velocity[1] = 0
                     
     # This is not being used I think. Either scrap it or redo it ig.
@@ -124,7 +125,7 @@ class Player(pygame.sprite.Sprite):
              self.velocity[1] = TERMINAL_VELOCITY
 
     def update_player_rect(self):
-        # self.collision_rect.bottomleft = self.x, self.y
+        # self.collision_rect.bottomleft = self.position[0], self.position[1]
         self.rect.midbottom = self.collision_rect.midbottom
         
     def handle_input(self, events, dt):

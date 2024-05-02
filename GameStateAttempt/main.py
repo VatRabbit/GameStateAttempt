@@ -1,17 +1,18 @@
 '''
 
 TO ADD:
-- camera
 - enemy
 - jump buffer
 - variable jump height
 
 ISSUES:
 - jumping not consistent on different frame rates
+- camera doesn't center on player correctly
 
 '''
 
 import pygame, time, player
+from sprite_handler import sprite_handler
 from sys import exit
 
 DISPLAY_SCALE = 2
@@ -31,15 +32,19 @@ class Game:
         self.clock = pygame.time.Clock()
         self.dt = 0.0
         self.last_update = 0.0
-              
-        self.player = player.Player(self.display)
+          
+        self.sprite_handler = sprite_handler()
+        self.sprite_handler.load_sprites()
+
+        self.player = player.Player(self.display, self.sprite_handler.player_idle, self.sprite_handler.player_run, self.sprite_handler.player_jump)
+        # self.player.load_sprite_sheet()
         
         self.game_state_manager = self.Game_State_Manager('menu')  
         self.menu = self.Menu(self.display, self.game_state_manager)
         self.level = self.Level(self.display, self.game_state_manager, self.player, self.dt)
         self.states = {'level': self.level, 'menu': self.menu}
         
-    def mainLoop(self):
+    def main_loop(self):
         while True:
             self.events = pygame.event.get() 
             for event in self.events:
@@ -107,6 +112,7 @@ class Game:
             self.tile_rect_list = self.create_tile_rects()          
                     
         def run(self, events, dt):
+            '''
             if self.new_state:
                 self.true_offset_x = self.player.x - SCALED_WIDTH / 2 + 8
                 self.offset_x = int(self.true_offset_x)
@@ -116,15 +122,16 @@ class Game:
                 self.true_offset_x += self.player.velocity[0]            
             
             '''
+            '''
             if self.true_offset_x - self.offset_x != 0:                 
                  print(f"offset:      {self.offset_x}") 
                  self.offset_x = int(self.offset_x)
             '''
 
-            self.offset_x += (self.true_offset_x - self.offset_x) / 12
-            print(f"true_offset: {self.true_offset_x}")
-            print(f"offset:      {self.offset_x}") 
-            print(f"dt:          {dt}")
+            # self.offset_x += (self.true_offset_x - self.offset_x + 12) / 12
+            # print(f"true_offset: {self.true_offset_x}")
+            # print(f"offset:      {self.offset_x}") 
+            # print(f"player_x:    {self.player.x}")
 
             self.collision_check_list = self.check_collisions()               
             self.player.update(events, dt, self.collision_check_list)
@@ -201,4 +208,4 @@ class Game:
                
 if __name__ == '__main__':
     game = Game()
-    game.mainLoop()
+    game.main_loop()

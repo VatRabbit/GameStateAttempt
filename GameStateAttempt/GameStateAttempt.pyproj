@@ -21,7 +21,19 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="enemy.py" />
     <Compile Include="main.py" />
+    <Compile Include="player.py" />
+    <Compile Include="sprite_handler.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="sprites\" />
+    <Folder Include="__pycache__\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="sprites\player.png" />
+    <Content Include="__pycache__\main.cpython-312.pyc" />
+    <Content Include="__pycache__\player.cpython-312.pyc" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in

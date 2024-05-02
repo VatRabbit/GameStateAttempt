@@ -7,32 +7,32 @@ SPEED = 175
 COYOTE_LIMIT = 0.1
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, display):
+    def __init__(self, display, sprites_idle, sprites_run, sprites_jump):
         super().__init__()
-        self.display = display
-        self.load_sprite_sheet()      
+        self.display = display       
         
         self.animation_state_manager = self.Animation_State_Manager('idle')
-        self.animation_idle = self.Animation_Idle(display, self.sprite_list_idle)
-        self.animation_run = self.Animation_Run(display, self.sprite_list_run)
-        self.animation_jump = self.Animation_Jump(display, self.sprite_list_jump)
+        self.animation_idle = self.Animation_Idle(display, sprites_idle)
+        self.animation_run  = self.Animation_Run(display, sprites_run)
+        self.animation_jump = self.Animation_Jump(display, sprites_jump)
         self.animation_states = {'idle': self.animation_idle, 'run': self.animation_run, 'jump': self.animation_jump}
         
-        self.sprites = self.sprite_list_idle
-        self.rect = self.sprites[0].get_rect(bottomleft = (20,100))
-        self.collision_rect = pygame.Rect(0,0,10,20)
+        # self.sprites = self.sprite_list_idle
+        self.rect = pygame.Rect(0,0, 16,16)
+        self.collision_rect = pygame.Rect(0,0,10,16)
         
         # handles which direction the sprite should be facing during animations
         self.reverse = False
         # velocity[0] = left/right, velocity[1] = up/down
         self.velocity = [0,0]
-        self.x, self.y = 0.0, 0.0        
+        self.position = [0,0]
+        self.x, self.y = 0.0, 0.0
         self.coyote_time = 0.0
         self.jump_buffer = 0.0
         self.jump_height_counter = 0.0
         self.double_jump_ready = False
         # self.collider = pygame.Rect(0,0,0,0)
-        self.is_grounded = False   
+        self.is_grounded = False
         self.last_y = 0.0
         
     def check_grounded(self, collision_list):
@@ -48,7 +48,7 @@ class Player(pygame.sprite.Sprite):
 
     def coyote_counter(self, dt):
         if self.is_grounded == False:
-            self.coyote_time += dt     
+            self.coyote_time += dt  
         else:
             self.coyote_time = 0.0
 
@@ -185,42 +185,6 @@ class Player(pygame.sprite.Sprite):
                         
         if self.is_grounded == False:
             self.animation_state_manager.set_state('jump')
-            
-    def load_sprite_sheet(self):
-        # 198 x 192p spritesheet with 6 collumbs and 6 rows 
-        sprites = []
-        spritesNumberWidth = 6
-        spritesNumberHeight = 6
-        spriteSheet = pygame.image.load('GameStateAttempt\player\player.png').convert_alpha()
-        spriteSheetWidth = spriteSheet.get_width()
-        spriteSheetHeight = spriteSheet.get_height()
-        spriteWidth = spriteSheetWidth // spritesNumberWidth
-        spriteHeight = spriteSheetHeight // spritesNumberHeight
-        
-        for y in range(spritesNumberWidth):
-            for x in range(spritesNumberHeight):                        
-                spriteX = x * spriteWidth
-                spriteY = y * spriteHeight                
-                
-                spriteRect = pygame.Rect(spriteX, spriteY, spriteWidth, spriteHeight)
-                
-                isBlank = True
-                for i in range(spriteRect.width):
-                    for j in range(spriteRect.height):
-                        pixelColor = spriteSheet.get_at((spriteRect.x + i, spriteRect.y + j))
-                        if pixelColor[3] != 0: # check the alpha channel
-                            isBlank = False
-                            break
-
-                if not isBlank:
-                    sprites.append(spriteSheet.subsurface(spriteRect))
-        
-        self.sprite_list_idle   = [sprites[0],  sprites[1],  sprites[2],  sprites[3]]
-        self.sprite_list_run    = [sprites[4],  sprites[5],  sprites[6],  sprites[7], sprites[8],  sprites[9]]
-        self.sprite_list_climb  = [sprites[10], sprites[11], sprites[12], sprites[13]]
-        self.sprite_list_crouch = [sprites[14], sprites[15], sprites[16]]
-        self.sprite_list_death  = [sprites[17], sprites[18]]
-        self.sprite_list_jump   = [sprites[19], sprites[20]]
                 
     class Animation_State_Manager:
         def __init__(self, current_state):

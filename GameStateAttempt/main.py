@@ -1,15 +1,18 @@
 '''
-
 TO ADD:
 - enemy
 - jump buffer
 - variable jump height
 - more optimizion by only rendering visible tiles
+- stop camera scrolling at ends of map
+- sound class to load and handout music and sfx
+- paralax scrolling bg 
+- actual sprites some day
 
 ISSUES:
 - jumping not consistent on different frame rates
 - camera doesn't center on player correctly
-
+- maybe have more delta time issue
 '''
 
 import pygame, time, player, enemy
@@ -53,18 +56,15 @@ class Game:
                     exit() 
                     
             self.states[self.game_state_manager.get_state()].run(self.events, self.dt)
-            
-            self.render()            
-                        
-            self.timer()
-            self.clock.tick(FPS)
+
+            self.render()
+
+            self.timer()           
            
     def timer(self):
         self.dt = time.time() - self.last_update
-        DELTA_TIME = self.dt
-        print(f"DELTA_TIME : {DELTA_TIME}")
         self.last_update = time.time()
-        # print(f"main dt : {self.dt}")
+        self.clock.tick(FPS)
             
     def render(self):           
         self.states[self.game_state_manager.get_state()].render()
@@ -86,17 +86,16 @@ class Game:
         def __init__(self, display, game_state_manager, player, dt):
             self.display = display
             self.game_state_manager = game_state_manager
-            self.player = player
-            self.collision_check_list = []            
-            self.dt = dt            
+            self.player = player                     
             self.new_state = True
             self.true_offset_x = 0.0
             self.offset_x = 0 
             self.first_run = True
-            self.tile_rect_list = []            
+            self.tilemap_rect_list = []            
             self.enemy_list = []
             
             # y then x for these (it's sideways :/ )
+            # currently a 10x28 map
             self.level_tiles = [
                 [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
                 [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
@@ -104,26 +103,25 @@ class Game:
                 [1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
                 [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
                 [1,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,1],
-                [1,0,0,1,1,1,0,0,0,0,0,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                [1,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
                 [1,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-                [1,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1],
+                [1,0,3,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1],
                 [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
             ]
             
         def run(self, events, dt):    
             if self.first_run:
-                self.tile_rect_list = self.create_tile_rects()    
-                self.first_run = False
-            self.camera()
-            self.collision_check_list = self.check_collisions()               
-            self.player.update(events, dt, self.collision_check_list)
-            # self.player.sign_off()
-            for enemy in self.enemy_list:
-                enemy.update()
-                # enemy.sign_off()
-                
-            # print(f"main dt : {self.dt}")
+                self.tilemap_rect_list = self.create_tile_rects(dt)    
+                # print(len(self.level_tiles))
+                # print(len(self.level_tiles[0]))
+                self.first_run = False                
             
+            self.camera()              
+            
+            self.player.update(events, dt, self.level_tiles)
+            for enemy in self.enemy_list:
+                enemy.update(dt)
+
         def camera(self):
             if self.new_state:
                 self.true_offset_x = self.player.position[0] - SCALED_WIDTH / 2 + 8
@@ -136,13 +134,12 @@ class Game:
             # set the offset for the camera. Subtract 0.5 (tiles) to center everything
             self.offset_x += (self.true_offset_x - self.offset_x) / 12 - 0.5
             
-        def create_tile_rects(self):
+        def create_tile_rects(self, dt):
             rect_list = []
         
             for x in range(len(self.level_tiles)):
                 for y in range(len(self.level_tiles[0])):
-                    if self.level_tiles[x][y] == 1:
-                        # draw tile sprites here later instead of rect
+                    if self.level_tiles[x][y] == 1:                        
                         rect = pygame.Rect(y * TILE_SIZE, x * TILE_SIZE, TILE_SIZE, TILE_SIZE)
                         rect_list.append(rect)
                     
@@ -153,49 +150,27 @@ class Game:
                         
                     # check for enemies! 
                     elif self.level_tiles[x][y] == 3:  
-                        print("enemy found!")
+                        # print("enemy found!")
                         pos_x = y * TILE_SIZE
                         pos_y = x * TILE_SIZE                        
-                        new_enemy = enemy.enemy(self.display, pos_x, pos_y, self.dt)
+                        new_enemy = enemy.enemy(self.display, pos_x, pos_y, dt, self.tilemap_rect_list)
                         self.enemy_list.append(new_enemy)
 
             return rect_list
         
-        # take in the 3x4 grid surrounding the player to check for collisions
-        def check_collisions(self):
-            check_list = []
-            for i in range(-1, 2):
-                for j in range(-1, 3):
-                    grid_y = int((self.player.position[0]) / TILE_SIZE + i)
-                    grid_x = int((self.player.position[1]) / TILE_SIZE + j - 1)
-                    
-                    if 0 <= grid_x < len(self.level_tiles) and 0 <= grid_y < len(self.level_tiles[0]):
-                         if self.level_tiles[grid_x][grid_y] == 1:
-                              rect = pygame.Rect(grid_y * TILE_SIZE, grid_x * TILE_SIZE, TILE_SIZE, TILE_SIZE)
-                              check_list.append(rect)
-
-            return check_list
-        
         def render(self):
             self.display.fill((110, 140, 140))
-            self.render_tiles()
-            self.show_collision_check_list()            
+            self.render_tiles()                     
             for enemy in self.enemy_list:
                 enemy.render(self.offset_x)
             self.player.render(self.offset_x)
             
         def render_tiles(self):
-            for rect in self.tile_rect_list:
+            for rect in self.tilemap_rect_list:
                 temp = rect.copy()
                 temp.x -= self.offset_x
                 pygame.draw.rect(self.display, (100,100,250), temp, 2)
                 
-        # displays the tiles in range for collision checks
-        def show_collision_check_list(self):
-            for rect in self.collision_check_list:
-                rect.x -= self.offset_x
-                pygame.draw.rect(self.display, (100,100,250), rect)
-
         def reset(self):
             pass
             

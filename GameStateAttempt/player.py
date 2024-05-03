@@ -1,5 +1,9 @@
+from tabnanny import check
 import pygame
 
+from main import TILE_SIZE
+
+# i don't think these need to be global variables
 TERMINAL_VELOCITY = 5
 G_ACCELERATION = 25
 JUMP = -7
@@ -12,13 +16,14 @@ class Player(pygame.sprite.Sprite):
         self.display = display       
         
         self.animation_state_manager = self.Animation_State_Manager('idle')
-        self.animation_idle = self.Animation_Idle(display, sprites_idle)
-        self.animation_run  = self.Animation_Run(display, sprites_run)
-        self.animation_jump = self.Animation_Jump(display, sprites_jump)
-        self.animation_states = {'idle': self.animation_idle, 'run': self.animation_run, 'jump': self.animation_jump}
+        self.animation_idle          = self.Animation_Idle(display, sprites_idle)
+        self.animation_run           = self.Animation_Run(display, sprites_run)
+        self.animation_jump          = self.Animation_Jump(display, sprites_jump)
+        self.animation_states        = {'idle': self.animation_idle, 'run': self.animation_run, 'jump': self.animation_jump}
          
-        self.rect           = pygame.Rect(0,0, 31,32)
+        self.rect           = pygame.Rect(0,0, 32,32)
         self.collision_rect = pygame.Rect(0,0,  9,20)
+        self.collision_list = []
         
         # handles which direction the sprite should be facing during animations
         self.reverse = False
@@ -35,11 +40,11 @@ class Player(pygame.sprite.Sprite):
         self.is_grounded = False
         self.last_y = 0.0
         
-    def check_grounded(self, collision_list):
+    def check_grounded(self):
         tollerance = 0.7
         self.is_grounded = False
         
-        for rect in collision_list:
+        for rect in self.collision_list:
             if rect.colliderect(self.collision_rect) and self.velocity[1] >= 0:
                 self.is_grounded = True
                 self.velocity[1] = tollerance
@@ -52,35 +57,29 @@ class Player(pygame.sprite.Sprite):
         else:
             self.coyote_time = 0.0
 
-    def update(self, events, dt, col_list):
+    def update(self, events, dt, tilemap):
         self.handle_input(events, dt)
+        self.collision_list = self.check_collisions(tilemap)
         
         # handle self.position[0], left/right movement and check left/right collisions 
         self.update_x_velocity()
-        self.handle_x_collisions(col_list)
+        self.handle_x_collisions()
                 
         # handle self.position[1], up/down movement and check for up/down collisions
         self.apply_gravity(dt)
         self.update_y_velocity()        
-        self.check_grounded(col_list)
-        self.handle_y_collisions(col_list)
+        self.check_grounded()
+        self.handle_y_collisions()
           
         self.update_player_rect()
         self.coyote_counter(dt)
         
-        '''
-        print(f"self.position[0]    : {self.position[0]}")
-        print(f"self.position[1]    : {self.position[1]}")
-        print(f"self.rect           : {self.rect}")
-        print(f"self.collision_rect : {self.collision_rect}")
-        '''
+        # print(f"player position - {self.position}")
         
     def render(self, offset_x):        
         self.rect.x -= offset_x
+        self.show_collision_check_list(offset_x)
         self.animation_states[self.animation_state_manager.get_state()].run(self.rect, self.reverse)
-        
-    def sign_off(self):
-        print(f"player position : {self.position}")
         
     def update_x_velocity(self):
         self.position[0] += self.velocity[0]
@@ -91,10 +90,42 @@ class Player(pygame.sprite.Sprite):
         self.position[1] += self.velocity[1]
         self.collision_rect.bottom = self.position[1]
         
-    def handle_x_collisions(self, collision_list):
+    def apply_gravity(self, dt):
+         self.velocity[1] += G_ACCELERATION * dt
+         if self.velocity[1] > TERMINAL_VELOCITY:
+             self.velocity[1] = TERMINAL_VELOCITY
+
+    def update_player_rect(self):
+        # self.collision_rect.bottomleft = self.position[0], self.position[1]
+        self.rect.midbottom = self.collision_rect.midbottom
+     
+    def check_collisions(self, tilemap):
+        check_list = []
+        for i in range(-1, 2):
+            for j in range(-1, 3):
+                grid_y = int((self.position[0]) / TILE_SIZE + i)
+                grid_x = int((self.position[1]) / TILE_SIZE + j - 1)
+                  
+                if 0 <= grid_x < len(tilemap) and 0 <= grid_y < len(tilemap[0]):
+                     if tilemap[grid_x][grid_y] == 1:
+                          rect = pygame.Rect(grid_y * TILE_SIZE, grid_x * TILE_SIZE, TILE_SIZE, TILE_SIZE)
+                          check_list.append(rect)
+
+        # print(len(tilemap))
+        # print(len(tilemap[0]))        
+        # print(check_list)
+        return check_list
+    
+    # displays the tiles in range for collision checks
+    def show_collision_check_list(self, offset_x):
+        for rect in self.collision_list:
+            rect.x -= offset_x
+            pygame.draw.rect(self.display, (100,100,250), rect)
+
+    def handle_x_collisions(self):
         tollerance = 10
         
-        for rect in collision_list:
+        for rect in self.collision_list:
             if rect.colliderect(self.collision_rect):
                 # check for left collision first
                 if self.collision_rect.left - tollerance <= rect.right <= self.collision_rect.left + tollerance:
@@ -108,11 +139,11 @@ class Player(pygame.sprite.Sprite):
                     self.collision_rect.left = self.position[0]
                     self.velocity[0] = 0
                 
-    def handle_y_collisions(self, collision_list):
+    def handle_y_collisions(self):
         # max of 8
         tollerance = 8
         
-        for rect in collision_list:
+        for rect in self.collision_list:
             if rect.colliderect(self.collision_rect):                                
                 if self.collision_rect.bottom + tollerance >= rect.top >= self.collision_rect.bottom - tollerance:
                     self.position[1] = rect.top
@@ -122,19 +153,6 @@ class Player(pygame.sprite.Sprite):
                     self.position[1] = rect.bottom + self.collision_rect.height
                     self.collision_rect.bottom = self.position[1]       
                     self.velocity[1] = 0
-                    
-    # This is not being used I think. Either scrap it or redo it ig.
-    def collision_detected(self):
-        pygame.draw.rect(self.display, (250,250,50), self.collider)
-    
-    def apply_gravity(self, dt):
-         self.velocity[1] += G_ACCELERATION * dt
-         if self.velocity[1] > TERMINAL_VELOCITY:
-             self.velocity[1] = TERMINAL_VELOCITY
-
-    def update_player_rect(self):
-        # self.collision_rect.bottomleft = self.position[0], self.position[1]
-        self.rect.midbottom = self.collision_rect.midbottom
         
     def handle_input(self, events, dt):
         keys = pygame.key.get_pressed()

@@ -1,46 +1,58 @@
+'''
+will need to create a rect infront and below the enemy to check for empty space
+also check for walls so it can reverse direction
+'''
+
 import pygame
 
-from main import DELTA_TIME
-
 class enemy(pygame.sprite.Sprite):
-    def __init__(self, display, x, y, dt):
+    def __init__(self, display, x, y, dt, tilemap):
         super().__init__()
         
-        self.display = display
-        self.dt = dt
+        self.display = display        
         
         self.velocity      = [0, 0]
         self.true_location = [x, y]
         self.location      = [0, 0]
         self.rect = pygame.Rect(0,0,16,16)
-        
-        print('I am alive!')
-        print(f'true location: {self.true_location}')
-        print(f'location     : {self.location}')
+        self.collision_list = []
+        self.reverse = False
         
     # carry out enemy logic, set velocity and direction, and set animation states
-    def AI(self):
-        self.velocity[0] += 100 * DELTA_TIME
-        # print(f"velocity : {self.velocity}")
-        # print(f"dt : {self.dt}")
-    
+    def AI(self, dt):
+        # if rect.x  
+        
+        self.velocity[0] = dt * 20
+     
+    '''
+    def check_collisions(self, tilemap):
+        check_list = []
+        for i in range(-1, 2):
+            for j in range(-1, 3):
+                grid_y = int((self.player.position[0]) / TILE_SIZE + i)
+                grid_x = int((self.player.position[1]) / TILE_SIZE + j - 1)
+                    
+                if 0 <= grid_x < len(self.level_tiles) and 0 <= grid_y < len(self.level_tiles[0]):
+                     if self.level_tiles[grid_x][grid_y] == 1:
+                          rect = pygame.Rect(grid_y * TILE_SIZE, grid_x * TILE_SIZE, TILE_SIZE, TILE_SIZE)
+                          check_list.append(rect)
+
+        return check_list
+    '''    
+            
     # apply velocity to enemy
-    def update(self):
-        self.AI()
+    def update(self, dt):
+        self.AI(dt)
         self.true_location[0] += self.velocity[0]
         self.location[0] = int(self.true_location[0])
         self.location[1] = int(self.true_location[1])
         self.rect.x = self.location[0]
         self.rect.y = self.location[1]
-        # print(f"enemy velocity x : {self.velocity[0]}")
-        # print(f'true location    : {self.true_location}')        
-        # print(self.rect.x, self.rect.y)
     
     # render that shit
     def render(self, offset_x):
         self.rect.x -= offset_x
         pygame.draw.rect(self.display, (200,10,10), self.rect)
-        # print('rendering')
     
     class Animation_State_Manager:
         def __init__(self, current_state):
@@ -52,5 +64,5 @@ class enemy(pygame.sprite.Sprite):
         def set_state(self, state):
             self.current_state = state
 
-    def sign_off(self):
-        print(f"enemy position  : {self.location}")
+if __name__ == '__main__':
+    pass

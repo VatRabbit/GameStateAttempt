@@ -45,3 +45,5 @@ class sprite_handler():
         self.player_death  = [sprites[17], sprites[18]                                                  ]
         self.player_jump   = [sprites[19], sprites[20]                                                  ]
     
+if __name__ == '__main__':
+    pass

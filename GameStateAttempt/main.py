@@ -96,7 +96,7 @@ class Game:
             
             # y then x for these (it's sideways :/ )
             # currently a 10x28 map
-            self.level_tiles = [
+            self.tilemap = [
                 [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
                 [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
                 [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
@@ -112,15 +112,13 @@ class Game:
         def run(self, events, dt):    
             if self.first_run:
                 self.tilemap_rect_list = self.create_tile_rects(dt)    
-                # print(len(self.level_tiles))
-                # print(len(self.level_tiles[0]))
                 self.first_run = False                
             
             self.camera()              
             
-            self.player.update(events, dt, self.level_tiles)
+            self.player.update(events, dt, self.tilemap)
             for enemy in self.enemy_list:
-                enemy.update(dt)
+                enemy.update(dt, self.tilemap, TILE_SIZE)
 
         def camera(self):
             if self.new_state:
@@ -137,19 +135,19 @@ class Game:
         def create_tile_rects(self, dt):
             rect_list = []
         
-            for x in range(len(self.level_tiles)):
-                for y in range(len(self.level_tiles[0])):
-                    if self.level_tiles[x][y] == 1:                        
+            for x in range(len(self.tilemap)):
+                for y in range(len(self.tilemap[0])):
+                    if self.tilemap[x][y] == 1:                        
                         rect = pygame.Rect(y * TILE_SIZE, x * TILE_SIZE, TILE_SIZE, TILE_SIZE)
                         rect_list.append(rect)
                     
                     # check for player spawn tile
-                    elif self.level_tiles[x][y] == 2:
+                    elif self.tilemap[x][y] == 2:
                         self.player.position[0] = y * TILE_SIZE
                         self.player.position[1] = x * TILE_SIZE + TILE_SIZE
                         
                     # check for enemies! 
-                    elif self.level_tiles[x][y] == 3:  
+                    elif self.tilemap[x][y] == 3:  
                         # print("enemy found!")
                         pos_x = y * TILE_SIZE
                         pos_y = x * TILE_SIZE                        

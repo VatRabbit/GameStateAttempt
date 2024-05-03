@@ -1,4 +1,3 @@
-from tabnanny import check
 import pygame
 
 from main import TILE_SIZE
@@ -78,7 +77,7 @@ class Player(pygame.sprite.Sprite):
         
     def render(self, offset_x):        
         self.rect.x -= offset_x
-        self.show_collision_check_list(offset_x)
+        # self.show_collision_check_list(offset_x)
         self.animation_states[self.animation_state_manager.get_state()].run(self.rect, self.reverse)
         
     def update_x_velocity(self):
@@ -110,10 +109,7 @@ class Player(pygame.sprite.Sprite):
                      if tilemap[grid_x][grid_y] == 1:
                           rect = pygame.Rect(grid_y * TILE_SIZE, grid_x * TILE_SIZE, TILE_SIZE, TILE_SIZE)
                           check_list.append(rect)
-
-        # print(len(tilemap))
-        # print(len(tilemap[0]))        
-        # print(check_list)
+                          
         return check_list
     
     # displays the tiles in range for collision checks

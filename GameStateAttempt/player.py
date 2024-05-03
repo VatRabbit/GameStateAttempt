@@ -16,10 +16,9 @@ class Player(pygame.sprite.Sprite):
         self.animation_run  = self.Animation_Run(display, sprites_run)
         self.animation_jump = self.Animation_Jump(display, sprites_jump)
         self.animation_states = {'idle': self.animation_idle, 'run': self.animation_run, 'jump': self.animation_jump}
-        
- 
-        self.rect = pygame.Rect(0,0, 32,32)
-        self.collision_rect = pygame.Rect(0,0,10,16)
+         
+        self.rect           = pygame.Rect(0,0, 31,32)
+        self.collision_rect = pygame.Rect(0,0,  9,20)
         
         # handles which direction the sprite should be facing during animations
         self.reverse = False
@@ -62,22 +61,31 @@ class Player(pygame.sprite.Sprite):
                 
         # handle self.position[1], up/down movement and check for up/down collisions
         self.apply_gravity(dt)
-        self.update_y_velocity()
+        self.update_y_velocity()        
         self.check_grounded(col_list)
         self.handle_y_collisions(col_list)
           
         self.update_player_rect()
         self.coyote_counter(dt)
         
-    def render(self, offset_x):
-        rect = self.rect
-        rect.x -= offset_x
-        self.animation_states[self.animation_state_manager.get_state()].run(rect, self.reverse)
+        '''
+        print(f"self.position[0]    : {self.position[0]}")
+        print(f"self.position[1]    : {self.position[1]}")
+        print(f"self.rect           : {self.rect}")
+        print(f"self.collision_rect : {self.collision_rect}")
+        '''
+        
+    def render(self, offset_x):        
+        self.rect.x -= offset_x
+        self.animation_states[self.animation_state_manager.get_state()].run(self.rect, self.reverse)
+        
+    def sign_off(self):
+        print(f"player position : {self.position}")
         
     def update_x_velocity(self):
         self.position[0] += self.velocity[0]
         self.collision_rect.left = self.position[0]
-        print(f"self.collision_rect.left:{self.collision_rect.left}")
+        # print(f"self.collision_rect.left:{self.collision_rect.left}")
         
     def update_y_velocity(self):
         self.position[1] += self.velocity[1]

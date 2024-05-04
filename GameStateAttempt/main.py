@@ -4,14 +4,12 @@ TO ADD:
 - jump buffer
 - variable jump height
 - more optimizion by only rendering visible tiles
-- stop camera scrolling at ends of map
 - sound class to load and handout music and sfx
 - paralax scrolling bg 
 - actual sprites some day
 
 ISSUES:
 - jumping not consistent on different frame rates
-- camera doesn't center on player correctly
 - maybe have more delta time issue
 '''
 
@@ -95,17 +93,17 @@ class Game:
             self.enemy_list = []
             
             # y then x for these (it's sideways :/ )
-            # currently a 10x28 map
+            # currently a 28x10 map            
             self.tilemap = [
                 [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
                 [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-                [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,1],
                 [1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
                 [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
                 [1,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,1],
                 [1,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
                 [1,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-                [1,0,0,0,1,0,0,3,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1],
+                [1,0,0,0,0,0,0,3,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1],
                 [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
             ]
             
@@ -120,17 +118,27 @@ class Game:
             for enemy in self.enemy_list:
                 enemy.update(dt, self.tilemap, TILE_SIZE)
 
+        # game window is 224px or 14 tiles wide.
         def camera(self):
             if self.new_state:
                 self.true_offset_x = self.player.position[0] - SCALED_WIDTH / 2 + 8
                 self.offset_x = int(self.true_offset_x)
                 self.new_state = False
                 
-            if self.player.velocity[0] != 0:
+            if self.player.velocity[0] != 0:                
                 self.true_offset_x += self.player.velocity[0]
-
+                
             # set the offset for the camera. Subtract 0.5 (tiles) to center everything
             self.offset_x += (self.true_offset_x - self.offset_x) / 12 - 0.5
+            
+            if self.offset_x < 0:
+                self.offset_x = 0
+             
+            elif self.offset_x > len(self.tilemap[0]) * TILE_SIZE - 224:
+                self.offset_x  = len(self.tilemap[0]) * TILE_SIZE - 224
+                
+            # print(self.offset_x)
+            # print(len(self.tilemap[0]) + 1)
             
         def create_tile_rects(self, dt):
             rect_list = []

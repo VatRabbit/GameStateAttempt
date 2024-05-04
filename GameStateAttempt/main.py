@@ -105,7 +105,7 @@ class Game:
                 [1,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,1],
                 [1,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
                 [1,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-                [1,0,3,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1],
+                [1,0,0,0,1,0,0,3,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1],
                 [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
             ]
             
@@ -151,7 +151,7 @@ class Game:
                         # print("enemy found!")
                         pos_x = y * TILE_SIZE
                         pos_y = x * TILE_SIZE                        
-                        new_enemy = enemy.enemy(self.display, pos_x, pos_y, dt, self.tilemap_rect_list)
+                        new_enemy = enemy.enemy(self.display, pos_x, pos_y)
                         self.enemy_list.append(new_enemy)
 
             return rect_list

@@ -1,9 +1,6 @@
 '''
-will need to create a rect infront and below the enemy to check for empty space
-also check for walls so it can reverse direction
-
-To-Do - 
-create rect in front of enemy and down one tile for checks and display it
+To Do:
+- idk
 '''
 
 import pygame
@@ -52,7 +49,6 @@ class enemy(pygame.sprite.Sprite):
         self.rect.x       = int(self.position[0])
         self.rect.y       = int(self.position[1])
         
-        
     # apply velocity to enemy
     def update(self, dt, tilemap, TILE_SIZE):
         self.AI(dt, tilemap, TILE_SIZE)
@@ -92,7 +88,7 @@ class enemy(pygame.sprite.Sprite):
             rect = pygame.Rect(int(self.position[0] / TILE_SIZE + 1) * TILE_SIZE, int(self.position[1] / TILE_SIZE + 1) * TILE_SIZE, TILE_SIZE, TILE_SIZE)
                 
         self.ground_rect = rect
-        print(tilemap[int(rect.y / TILE_SIZE)][int(rect.x / TILE_SIZE)])
+        # print(tilemap[int(rect.y / TILE_SIZE)][int(rect.x / TILE_SIZE)])
         
         if tilemap[int(rect.y / TILE_SIZE)][int(rect.x / TILE_SIZE)] == 0:
             return False            

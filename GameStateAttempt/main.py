@@ -11,6 +11,7 @@ TO ADD:
 ISSUES:
 - jumping not consistent on different frame rates
 - maybe have more delta time issue
+- figure out perfect center on camera by drawing lines or something
 '''
 
 import pygame, time, player, enemy
@@ -19,11 +20,12 @@ from sys import exit
 
 DISPLAY_SCALE = 2
 SCREEN_WIDTH, SCREEN_HEIGHT = 448, 320
-SCALED_WIDTH = SCREEN_WIDTH / DISPLAY_SCALE
+SCALED_WIDTH  = SCREEN_WIDTH / DISPLAY_SCALE
 SCALED_HEIGHT = SCREEN_HEIGHT / DISPLAY_SCALE
-FPS = 60
-TILE_SIZE = 16
-DELTA_TIME = 0.0
+RENDER_FPS = 60
+LOGIC_FPS  = 120
+TILE_SIZE  = 16
+LOGIC_DT = 1 / LOGIC_FPS
 
 class Game:
     def __init__(self):
@@ -31,7 +33,8 @@ class Game:
         pygame.display.set_caption('Crappy Platformer')
         self.display = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))        
         
-        self.clock = pygame.time.Clock()
+        self.render_clock = pygame.time.Clock()
+        self.logic_clock  = pygame.time.Clock()
         self.dt = 0.0
         self.last_update = 0.0
           
@@ -51,24 +54,31 @@ class Game:
             for event in self.events:
                 if event.type == pygame.QUIT:
                     pygame.quit()
-                    exit() 
-                    
-            self.states[self.game_state_manager.get_state()].run(self.events, self.dt)
+                    exit()
 
+            self.update_logic()            
             self.render()
-
             self.timer()           
            
     def timer(self):
         self.dt = time.time() - self.last_update
         self.last_update = time.time()
-        self.clock.tick(FPS)
-            
+        self.render_clock.tick(RENDER_FPS)
+        self.logic_clock.tick(LOGIC_FPS)
+        
+    def update_logic(self):
+        time_elapsed = 0
+        while time_elapsed < LOGIC_DT:
+             self.states[self.game_state_manager.get_state()].run(self.events, self.dt)
+             time_elapsed += 1 / LOGIC_FPS
+             print("logic")
+                         
     def render(self):           
         self.states[self.game_state_manager.get_state()].render()
         self.scaled_display = pygame.transform.scale(self.display, (self.display.get_width() * DISPLAY_SCALE, self.display.get_height() * DISPLAY_SCALE))
         self.display.blit(self.scaled_display, (0,0))
         pygame.display.flip()        
+        print('render')
         
     class Game_State_Manager:
         def __init__(self, current_state):
@@ -91,7 +101,7 @@ class Game:
             self.first_run = True
             self.tilemap_rect_list = []            
             self.enemy_list = []
-            self.camera_follow_multiplyer = 6
+            self.camera_follow_multiplyer = 10
             
             # y then x for these (it's sideways :/ )
             # currently a 28x10 map            
@@ -104,7 +114,7 @@ class Game:
                 [1,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,1],
                 [1,0,0,1,1,1,0,0,0,0,0,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
                 [1,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-                [1,0,0,0,0,3,0,0,0,0,1,1,1,1,1,0,1,0,1,0,1,0,1,0,1,0,1,1],
+                [1,0,0,0,0,3,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,1],
                 [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
             ]
             
@@ -130,7 +140,7 @@ class Game:
                 self.true_offset_x += self.player.velocity[0]
                 
             # set the offset for the camera. Subtract 0.5 (tiles) to center everything
-            self.offset_x += (self.true_offset_x - self.offset_x) / self.camera_follow_multiplyer - 0.5
+            self.offset_x += (self.true_offset_x - self.offset_x) / self.camera_follow_multiplyer - 1
             
             if self.offset_x < 0:
                 self.offset_x = 0

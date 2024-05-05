@@ -2,6 +2,7 @@
 TO ADD:
 - jump buffer
 - player should be able to run accross 1 tile gaps without falling 
+- player acceleration and deceleration
 
 ISSUES:
 - Jumping doesn't work with delta time because it's missing acceleration increments when it misses frames
@@ -98,7 +99,8 @@ class Player(pygame.sprite.Sprite):
         
     def apply_gravity(self, dt):
          gravity_change = self.g_acceleration * dt 
-         self.velocity[1] += gravity_change         
+         gravity_change_scaled = gravity_change
+         self.velocity[1] += gravity_change_scaled    
          if self.velocity[1] > self.terminal_velocity:
              self.velocity[1] = self.terminal_velocity
 

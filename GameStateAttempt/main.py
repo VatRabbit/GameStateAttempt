@@ -22,10 +22,9 @@ DISPLAY_SCALE = 2
 SCREEN_WIDTH, SCREEN_HEIGHT = 448, 320
 SCALED_WIDTH  = SCREEN_WIDTH / DISPLAY_SCALE
 SCALED_HEIGHT = SCREEN_HEIGHT / DISPLAY_SCALE
-RENDER_FPS = 60
-LOGIC_FPS  = 120
+RENDER_FPS = 30
+LOGIC_FPS  = 30
 TILE_SIZE  = 16
-LOGIC_DT = 1 / LOGIC_FPS
 
 class Game:
     def __init__(self):
@@ -56,30 +55,29 @@ class Game:
                     pygame.quit()
                     exit()
 
-            self.update_logic()            
-            self.render()
+            if pygame.time.get_ticks() % (1000 // LOGIC_FPS) == 0:
+                self.dt = time.time() - self.last_update
+                self.last_update = time.time()
+                self.update_logic()    
+            
+            if pygame.time.get_ticks() % (1000 // RENDER_FPS) == 0:
+                self.render()
+            
             self.timer()           
            
-    def timer(self):
-        self.dt = time.time() - self.last_update
-        self.last_update = time.time()
+    def timer(self):        
         self.render_clock.tick(RENDER_FPS)
         self.logic_clock.tick(LOGIC_FPS)
         
     def update_logic(self):
-        time_elapsed = 0
-        while time_elapsed < LOGIC_DT:
-             self.states[self.game_state_manager.get_state()].run(self.events, self.dt)
-             time_elapsed += 1 / LOGIC_FPS
-             print("logic")
-                         
+        self.states[self.game_state_manager.get_state()].run(self.events, self.dt)  
+                                      
     def render(self):           
         self.states[self.game_state_manager.get_state()].render()
         self.scaled_display = pygame.transform.scale(self.display, (self.display.get_width() * DISPLAY_SCALE, self.display.get_height() * DISPLAY_SCALE))
         self.display.blit(self.scaled_display, (0,0))
         pygame.display.flip()        
-        print('render')
-        
+                
     class Game_State_Manager:
         def __init__(self, current_state):
             self.current_state = current_state
@@ -128,7 +126,24 @@ class Game:
             self.player.update(events, dt, self.tilemap)
             for enemy in self.enemy_list:
                 enemy.update(dt, self.tilemap, TILE_SIZE)
-
+                
+            print("logic")
+        
+        def render(self):
+            self.display.fill((110, 140, 140))
+            self.render_tiles()                     
+            for enemy in self.enemy_list:
+                enemy.render(self.offset_x)
+            self.player.render(self.offset_x)
+            
+            print('render')
+            
+        def render_tiles(self):
+            for rect in self.tilemap_rect_list:
+                temp = rect.copy()
+                temp.x -= self.offset_x
+                pygame.draw.rect(self.display, (100,100,250), temp, 2)
+                
         # game window is 224px or 14 tiles wide.
         def camera(self):
             if self.new_state:
@@ -171,19 +186,6 @@ class Game:
                         self.enemy_list.append(new_enemy)
 
             return rect_list
-        
-        def render(self):
-            self.display.fill((110, 140, 140))
-            self.render_tiles()                     
-            for enemy in self.enemy_list:
-                enemy.render(self.offset_x)
-            self.player.render(self.offset_x)
-            
-        def render_tiles(self):
-            for rect in self.tilemap_rect_list:
-                temp = rect.copy()
-                temp.x -= self.offset_x
-                pygame.draw.rect(self.display, (100,100,250), temp, 2)
                 
         def reset(self):
             pass

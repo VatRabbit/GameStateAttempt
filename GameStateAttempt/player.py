@@ -42,13 +42,13 @@ class Player(pygame.sprite.Sprite):
         self.is_grounded         = False
         self.last_y              = 0.0        
         self.terminal_velocity   = 5
-        self.g_acceleration      = 300
-        self.jump                = -7
+        self.g_acceleration      = 15
+        self.jump                = -4
         self.speed               = 175
         self.coyote_limit        = 0.1
         
     def check_grounded(self):
-        tollerance = 0.7
+        tollerance = 1
         self.is_grounded = False
         
         for rect in self.collision_list:
@@ -66,7 +66,7 @@ class Player(pygame.sprite.Sprite):
 
     def update(self, events, dt, tilemap):
         self.handle_input(events, dt)
-        self.collision_list = self.check_collisions(tilemap)
+        self.collision_list = self.check_collisions(tilemap) 
         
         # handle self.position[0], left/right movement and check left/right collisions 
         self.update_x_velocity()
@@ -74,7 +74,7 @@ class Player(pygame.sprite.Sprite):
                 
         # handle self.position[1], up/down movement and check for up/down collisions
         self.apply_gravity(dt)
-        self.update_y_velocity() 
+        self.update_y_velocity()   
         self.check_grounded()               
         self.handle_y_collisions()        
           
@@ -161,7 +161,8 @@ class Player(pygame.sprite.Sprite):
                     self.velocity[1] = 0
         
     def handle_input(self, events, dt):
-        keys = pygame.key.get_pressed()        
+        keys = pygame.key.get_pressed() 
+        # print(keys)
 
         if self.is_grounded or self.coyote_time <= self.coyote_limit:
              for event in events:

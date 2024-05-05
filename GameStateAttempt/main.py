@@ -70,7 +70,7 @@ class Game:
             if self.logic_dt >= 1.0 / LOGIC_FPS:                            
                 self.update_logic()       
                 self.logic_dt -= 1.0 / LOGIC_FPS
-                pygame.event.clear()
+                self.events = []
                 # print('logic')
                 
             self.render_dt += self.render_clock.tick() / 1000.0    

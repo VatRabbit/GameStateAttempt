@@ -42,7 +42,7 @@ class Player(pygame.sprite.Sprite):
         self.is_grounded         = False
         self.last_y              = 0.0        
         self.terminal_velocity   = 5
-        self.g_acceleration      = 25
+        self.g_acceleration      = 300
         self.jump                = -7
         self.speed               = 175
         self.coyote_limit        = 0.1
@@ -161,7 +161,7 @@ class Player(pygame.sprite.Sprite):
                     self.velocity[1] = 0
         
     def handle_input(self, events, dt):
-        keys = pygame.key.get_pressed()
+        keys = pygame.key.get_pressed()        
 
         if self.is_grounded or self.coyote_time <= self.coyote_limit:
              for event in events:

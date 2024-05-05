@@ -18,13 +18,15 @@ import pygame, time, player, enemy
 from sprite_handler import sprite_handler
 from sys import exit
 
+RENDER_FPS    = 60
+LOGIC_FPS     = 120
+MAP_FPS       = 120
+TILE_SIZE     = 16
 DISPLAY_SCALE = 2
-SCREEN_WIDTH, SCREEN_HEIGHT = 448, 320
+SCREEN_WIDTH  = 448
+SCREEN_HEIGHT = 320
 SCALED_WIDTH  = SCREEN_WIDTH / DISPLAY_SCALE
 SCALED_HEIGHT = SCREEN_HEIGHT / DISPLAY_SCALE
-RENDER_FPS = 30
-LOGIC_FPS  = 30
-TILE_SIZE  = 16
 
 class Game:
     def __init__(self):
@@ -34,49 +36,63 @@ class Game:
         
         self.render_clock = pygame.time.Clock()
         self.logic_clock  = pygame.time.Clock()
-        self.dt = 0.0
-        self.last_update = 0.0
-          
+        self.dt           = 0.0
+        self.render_dt    = 0.0
+        self.logic_dt     = 0.0
+        self.last_update  = time.time()
+        self.last_logic   = time.time()
+        self.last_render  = time.time()
+        self.events       = []  
+
         self.sprite_handler = sprite_handler()
         self.sprite_handler.load_sprites()
 
         self.player = player.Player(self.display, self.sprite_handler.player_idle, self.sprite_handler.player_run, self.sprite_handler.player_jump)
                 
         self.game_state_manager = self.Game_State_Manager('menu')  
-        self.menu  = self.Menu(self.display, self.game_state_manager)
-        self.level = self.Level(self.display, self.game_state_manager, self.player, self.dt)
-        self.states = {'level': self.level, 'menu': self.menu}
+        self.menu               = self.Menu(self.display, self.game_state_manager)
+        self.level              = self.Level(self.display, self.game_state_manager, self.player, self.dt)
+        self.states             = {'level': self.level, 'menu': self.menu}
         
     def main_loop(self):
         while True:
-            self.events = pygame.event.get() 
+            self.events += pygame.event.get()
             for event in self.events:
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     exit()
-
-            if pygame.time.get_ticks() % (1000 // LOGIC_FPS) == 0:
-                self.dt = time.time() - self.last_update
-                self.last_update = time.time()
-                self.update_logic()    
+                    
+            current_time = time.time()
+            self.dt = current_time - self.last_update
+            self.last_update = current_time
             
-            if pygame.time.get_ticks() % (1000 // RENDER_FPS) == 0:
-                self.render()
-            
-            self.timer()           
-           
-    def timer(self):        
-        self.render_clock.tick(RENDER_FPS)
-        self.logic_clock.tick(LOGIC_FPS)
+            self.logic_dt  += self.logic_clock.tick()  / 1000.0
+            if self.logic_dt >= 1.0 / LOGIC_FPS:                            
+                self.update_logic()       
+                self.logic_dt -= 1.0 / LOGIC_FPS
+                pygame.event.clear()
+                # print('logic')
+                
+            self.render_dt += self.render_clock.tick() / 1000.0    
+            if self.render_dt >= 1.0 / RENDER_FPS:                
+                self.render()             
+                self.render_dt -= 1.0 / RENDER_FPS
+                # print('render')
+                
+            # self.logic_clock.tick()
+            # self.render_clock.tick(RENDER_FPS)
         
     def update_logic(self):
-        self.states[self.game_state_manager.get_state()].run(self.events, self.dt)  
+        self.last_logic = time.time()
+        self.states[self.game_state_manager.get_state()].run(self.events, self.logic_dt)  
                                       
-    def render(self):           
+    def render(self):  
+        self.last_render = time.time()         
         self.states[self.game_state_manager.get_state()].render()
         self.scaled_display = pygame.transform.scale(self.display, (self.display.get_width() * DISPLAY_SCALE, self.display.get_height() * DISPLAY_SCALE))
         self.display.blit(self.scaled_display, (0,0))
-        pygame.display.flip()        
+        pygame.display.flip()
+        # print('render')
                 
     class Game_State_Manager:
         def __init__(self, current_state):
@@ -118,7 +134,7 @@ class Game:
             
         def run(self, events, dt):    
             if self.first_run:
-                self.tilemap_rect_list = self.create_tile_rects(dt)    
+                self.tilemap_rect_list = self.create_tile_rects()    
                 self.first_run = False                
             
             self.camera()              
@@ -126,8 +142,6 @@ class Game:
             self.player.update(events, dt, self.tilemap)
             for enemy in self.enemy_list:
                 enemy.update(dt, self.tilemap, TILE_SIZE)
-                
-            print("logic")
         
         def render(self):
             self.display.fill((110, 140, 140))
@@ -135,8 +149,7 @@ class Game:
             for enemy in self.enemy_list:
                 enemy.render(self.offset_x)
             self.player.render(self.offset_x)
-            
-            print('render')
+            # print('rendering level')
             
         def render_tiles(self):
             for rect in self.tilemap_rect_list:
@@ -163,7 +176,7 @@ class Game:
             elif self.offset_x > len(self.tilemap[0]) * TILE_SIZE - 224:
                 self.offset_x  = len(self.tilemap[0]) * TILE_SIZE - 224
             
-        def create_tile_rects(self, dt):
+        def create_tile_rects(self):
             rect_list = []
         
             for x in range(len(self.tilemap)):
@@ -198,10 +211,12 @@ class Game:
         def run(self, events, dt):
             for event in events:
                  if event.type == pygame.KEYDOWN:
-                     self.game_state_manager.set_state('level')
+                     self.game_state_manager.set_state('level')                     
+            # print('running Menu')
                      
         def render(self):
             self.display.fill((140, 140, 110))
+            # print('rendering menu')
             
         def reset(self):
             pass

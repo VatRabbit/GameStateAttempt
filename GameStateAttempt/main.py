@@ -91,6 +91,7 @@ class Game:
             self.first_run = True
             self.tilemap_rect_list = []            
             self.enemy_list = []
+            self.camera_follow_multiplyer = 6
             
             # y then x for these (it's sideways :/ )
             # currently a 28x10 map            
@@ -99,11 +100,11 @@ class Game:
                 [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
                 [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,1],
                 [1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-                [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,0,0,0,0,1],
                 [1,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,1],
-                [1,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                [1,0,0,1,1,1,0,0,0,0,0,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
                 [1,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-                [1,0,0,0,0,0,0,3,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1],
+                [1,0,0,0,0,3,0,0,0,0,1,1,1,1,1,0,1,0,1,0,1,0,1,0,1,0,1,1],
                 [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
             ]
             
@@ -129,16 +130,13 @@ class Game:
                 self.true_offset_x += self.player.velocity[0]
                 
             # set the offset for the camera. Subtract 0.5 (tiles) to center everything
-            self.offset_x += (self.true_offset_x - self.offset_x) / 12 - 0.5
+            self.offset_x += (self.true_offset_x - self.offset_x) / self.camera_follow_multiplyer - 0.5
             
             if self.offset_x < 0:
                 self.offset_x = 0
              
             elif self.offset_x > len(self.tilemap[0]) * TILE_SIZE - 224:
                 self.offset_x  = len(self.tilemap[0]) * TILE_SIZE - 224
-                
-            # print(self.offset_x)
-            # print(len(self.tilemap[0]) + 1)
             
         def create_tile_rects(self, dt):
             rect_list = []
@@ -159,7 +157,7 @@ class Game:
                         # print("enemy found!")
                         pos_x = y * TILE_SIZE
                         pos_y = x * TILE_SIZE                        
-                        new_enemy = enemy.enemy(self.display, pos_x, pos_y)
+                        new_enemy = enemy.enemy(self.display, pos_x, pos_y, TILE_SIZE)
                         self.enemy_list.append(new_enemy)
 
             return rect_list

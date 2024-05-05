@@ -1,13 +1,15 @@
+'''
+TO ADD:
+- jump buffer
+- player should be able to run accross 1 tile gaps without falling 
+
+ISSUES:
+- Jumping doesn't work with delta time because it's missing acceleration increments when it misses frames
+'''
+
 import pygame
 
 from main import TILE_SIZE
-
-# i don't think these need to be global variables
-TERMINAL_VELOCITY = 5
-G_ACCELERATION = 25
-JUMP = -7
-SPEED = 175
-COYOTE_LIMIT = 0.1
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, display, sprites_idle, sprites_run, sprites_jump):
@@ -32,12 +34,17 @@ class Player(pygame.sprite.Sprite):
         #position[0] = x axis, position[1] = y axis
         self.position = [0,0]
         
-        self.coyote_time = 0.0
-        self.jump_buffer = 0.0
+        self.coyote_time         = 0.0
+        self.jump_buffer         = 0.0
         self.jump_height_counter = 0.0
-        self.double_jump_ready = False
-        self.is_grounded = False
-        self.last_y = 0.0
+        self.double_jump_ready   = False
+        self.is_grounded         = False
+        self.last_y              = 0.0        
+        self.terminal_velocity   = 5
+        self.g_acceleration      = 25
+        self.jump                = -7
+        self.speed               = 175
+        self.coyote_limit        = 0.1
         
     def check_grounded(self):
         tollerance = 0.7
@@ -66,18 +73,18 @@ class Player(pygame.sprite.Sprite):
                 
         # handle self.position[1], up/down movement and check for up/down collisions
         self.apply_gravity(dt)
-        self.update_y_velocity()        
-        self.check_grounded()
-        self.handle_y_collisions()
+        self.update_y_velocity() 
+        self.check_grounded()               
+        self.handle_y_collisions()        
           
         self.update_player_rect()
         self.coyote_counter(dt)
         
         # print(f"player position - {self.position}")
         
-    def render(self, offset_x):        
+    def render(self, offset_x):
         self.rect.x -= offset_x
-        # self.show_collision_check_list(offset_x)
+        self.show_collision_check_list(offset_x)
         self.animation_states[self.animation_state_manager.get_state()].run(self.rect, self.reverse)
         
     def update_x_velocity(self):
@@ -90,9 +97,10 @@ class Player(pygame.sprite.Sprite):
         self.collision_rect.bottom = self.position[1]
         
     def apply_gravity(self, dt):
-         self.velocity[1] += G_ACCELERATION * dt
-         if self.velocity[1] > TERMINAL_VELOCITY:
-             self.velocity[1] = TERMINAL_VELOCITY
+         gravity_change = self.g_acceleration * dt 
+         self.velocity[1] += gravity_change         
+         if self.velocity[1] > self.terminal_velocity:
+             self.velocity[1] = self.terminal_velocity
 
     def update_player_rect(self):
         # self.collision_rect.bottomleft = self.position[0], self.position[1]
@@ -101,13 +109,13 @@ class Player(pygame.sprite.Sprite):
     def check_collisions(self, tilemap):
         check_list = []
         for i in range(-1, 2):
-            for j in range(-1, 3):
-                grid_y = int((self.position[0]) / TILE_SIZE + i)
-                grid_x = int((self.position[1]) / TILE_SIZE + j - 1)
+            for j in range(-2, 2):
+                grid_x = int((self.position[0]) / TILE_SIZE + i)
+                grid_y = int((self.position[1]) / TILE_SIZE + j)
                   
-                if 0 <= grid_x < len(tilemap) and 0 <= grid_y < len(tilemap[0]):
-                     if tilemap[grid_x][grid_y] == 1:
-                          rect = pygame.Rect(grid_y * TILE_SIZE, grid_x * TILE_SIZE, TILE_SIZE, TILE_SIZE)
+                if 0 <= grid_y < len(tilemap) and 0 <= grid_x < len(tilemap[0]):
+                     if tilemap[grid_y][grid_x] == 1:
+                          rect = pygame.Rect(grid_x * TILE_SIZE, grid_y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
                           check_list.append(rect)
                           
         return check_list
@@ -119,7 +127,7 @@ class Player(pygame.sprite.Sprite):
             pygame.draw.rect(self.display, (100,100,250), rect)
 
     def handle_x_collisions(self):
-        tollerance = 10
+        tollerance = 8
         
         for rect in self.collision_list:
             if rect.colliderect(self.collision_rect):
@@ -153,11 +161,11 @@ class Player(pygame.sprite.Sprite):
     def handle_input(self, events, dt):
         keys = pygame.key.get_pressed()
 
-        if self.is_grounded or self.coyote_time <= COYOTE_LIMIT:
+        if self.is_grounded or self.coyote_time <= self.coyote_limit:
              for event in events:
                  if event.type == pygame.KEYDOWN:
                      if event.key == pygame.K_SPACE:
-                         self.velocity[1] = JUMP
+                         self.velocity[1] = self.jump
                          
         '''
         elif self.double_jump_ready == True:
@@ -180,7 +188,7 @@ class Player(pygame.sprite.Sprite):
         elif keys[pygame.K_LEFT] == True:
             self.animation_state_manager.set_state('run')
             self.reverse = True
-            self.velocity[0] = -SPEED * dt
+            self.velocity[0] = -self.speed * dt
             
             for event in events:
                 if event.type == pygame.KEYDOWN:
@@ -190,7 +198,7 @@ class Player(pygame.sprite.Sprite):
         elif keys[pygame.K_RIGHT] == True:
             self.animation_state_manager.set_state('run')
             self.reverse = False
-            self.velocity[0] = SPEED * dt
+            self.velocity[0] = self.speed * dt
             
             for event in events:
                 if event.type == pygame.KEYDOWN:

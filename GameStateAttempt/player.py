@@ -3,10 +3,18 @@ TO ADD:
 - jump buffer
 - player should be able to run accross 1 tile gaps without falling 
 - player acceleration and deceleration
+- need to apply rendering dt to animation states for stability across framerates?
 
 ISSUES:
 - Jumping doesn't work with delta time because it's missing acceleration increments when it misses frames
+
+MISC:
+- Swap out for global variables. They're better for values that can be tweaked
 '''
+
+JUMP = -4
+SPEED = 175
+COYOTE_LIMIT = 0.1
 
 import pygame
 
@@ -16,12 +24,12 @@ class Player(pygame.sprite.Sprite):
     def __init__(self, display, sprites_idle, sprites_run, sprites_jump):
         super().__init__()
         self.display = display       
-        
-        self.animation_state_manager = self.Animation_State_Manager('idle')
+                
         self.animation_idle          = self.Animation_Idle(display, sprites_idle)
         self.animation_run           = self.Animation_Run(display, sprites_run)
-        self.animation_jump          = self.Animation_Jump(display, sprites_jump)
-        self.animation_states        = {'idle': self.animation_idle, 'run': self.animation_run, 'jump': self.animation_jump}
+        self.animation_jump          = self.Animation_Jump(display, sprites_jump)        
+        self.animation_state_manager = self.Animation_State_Manager('idle')
+        self.animation_states        = {'idle': self.animation_idle, 'run': self.animation_run, 'jump': self.animation_jump}        
          
         self.rect           = pygame.Rect(0,0, 32,32)
         self.collision_rect = pygame.Rect(0,0,  9,20)
@@ -35,18 +43,18 @@ class Player(pygame.sprite.Sprite):
         #position[0] = x axis, position[1] = y axis
         self.position = [0,0]
         
-        self.coyote_time         = 0.0
-        self.jump_buffer         = 0.0
-        self.jump_height_counter = 0.0
-        self.double_jump_ready   = False
-        self.is_grounded         = False
         self.last_y              = 0.0        
         self.terminal_velocity   = 5
         self.g_acceleration      = 15
         self.jump                = -4
         self.speed               = 175
         self.coyote_limit        = 0.1
-        
+        self.coyote_time         = 0.0
+        self.jump_buffer         = 0.0
+        self.jump_height_counter = 0.0
+        self.double_jump_ready   = False
+        self.is_grounded         = False
+                
     def check_grounded(self):
         tollerance = 1
         self.is_grounded = False

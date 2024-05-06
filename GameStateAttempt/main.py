@@ -46,6 +46,8 @@ class Game:
 
         self.sprite_handler = sprite_handler()
         self.sprite_handler.load_sprites()
+        
+        # self.animation_player_idle = self.sprite_handler.player_idle
 
         self.player = player.Player(self.display, self.sprite_handler.player_idle, self.sprite_handler.player_run, self.sprite_handler.player_jump)
                 
@@ -84,11 +86,11 @@ class Game:
         
     def update_logic(self):
         self.last_logic = time.time()
-        self.states[self.game_state_manager.get_state()].run(self.events, self.logic_dt)  
+        self.states[self.game_state_manager.get_state()].run(self.events, self.logic_dt, self.sprite_handler)  
                                       
     def render(self):  
         self.last_render = time.time()         
-        self.states[self.game_state_manager.get_state()].render()
+        self.states[self.game_state_manager.get_state()].render(self.render_dt)
         self.scaled_display = pygame.transform.scale(self.display, (self.display.get_width() * DISPLAY_SCALE, self.display.get_height() * DISPLAY_SCALE))
         self.display.blit(self.scaled_display, (0,0))
         pygame.display.flip()
@@ -121,20 +123,20 @@ class Game:
             # currently a 28x10 map            
             self.tilemap = [
                 [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-                [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,0,0,0,0,0,0,0,0,0,0,0,1],
                 [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,1],
                 [1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-                [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,0,0,0,0,1],
+                [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
                 [1,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,1],
                 [1,0,0,1,1,1,0,0,0,0,0,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-                [1,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-                [1,0,0,0,0,3,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,1],
+                [1,0,0,0,0,0,0,0,0,0,1,1,1,0,0,3,0,0,0,0,0,0,0,0,0,0,0,1],
+                [1,0,0,0,0,3,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0,3,0,0,0,1],
                 [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
             ]
             
-        def run(self, events, dt):    
+        def run(self, events, dt, sprite_handler):    
             if self.first_run:
-                self.tilemap_rect_list = self.create_tile_rects()    
+                self.tilemap_rect_list = self.create_tile_rects(sprite_handler)    
                 self.first_run = False                
             
             self.camera()              
@@ -143,11 +145,11 @@ class Game:
             for enemy in self.enemy_list:
                 enemy.update(dt, self.tilemap, TILE_SIZE)
         
-        def render(self):
+        def render(self, dt):
             self.display.fill((110, 140, 140))
             self.render_tiles()                     
             for enemy in self.enemy_list:
-                enemy.render(self.offset_x)
+                enemy.render(self.offset_x, dt)
             self.player.render(self.offset_x)
             # print('rendering level')
             
@@ -176,7 +178,7 @@ class Game:
             elif self.offset_x > len(self.tilemap[0]) * TILE_SIZE - 224:
                 self.offset_x  = len(self.tilemap[0]) * TILE_SIZE - 224
             
-        def create_tile_rects(self):
+        def create_tile_rects(self, sprite_handler):
             rect_list = []
         
             for x in range(len(self.tilemap)):
@@ -195,7 +197,7 @@ class Game:
                         # print("enemy found!")
                         pos_x = y * TILE_SIZE
                         pos_y = x * TILE_SIZE                        
-                        new_enemy = enemy.enemy(self.display, pos_x, pos_y, TILE_SIZE)
+                        new_enemy = enemy.enemy(self.display, pos_x, pos_y, TILE_SIZE, sprite_handler.bunny_jump)
                         self.enemy_list.append(new_enemy)
 
             return rect_list
@@ -208,13 +210,13 @@ class Game:
             self.display = display
             self.game_state_manager = game_state_manager
             
-        def run(self, events, dt):
+        def run(self, events, dt, sprite_handler):
             for event in events:
                  if event.type == pygame.KEYDOWN:
                      self.game_state_manager.set_state('level')                     
             # print('running Menu')
                      
-        def render(self):
+        def render(self, dt):
             self.display.fill((140, 140, 110))
             # print('rendering menu')
             

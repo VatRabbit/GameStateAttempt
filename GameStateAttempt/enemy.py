@@ -1,91 +1,105 @@
 '''
 To Do:
-- idk
+- swap out self.rect for self.collision_rect where needed
 '''
 
 import pygame
 
+SPEED = 40
+ANIMATION_SPEED = 7
+
 class enemy(pygame.sprite.Sprite):
-    def __init__(self, display, x, y, TILE_SIZE):
+    def __init__(self, display, x, y, TILE_SIZE, sprites):
         super().__init__()
-        self.display        = display
-        self.velocity       = [0, 0]
-        self.position       = [x, y]
-        self.rect           = pygame.Rect(0,0, TILE_SIZE,TILE_SIZE)
-        self.collision_list = []
+        self.display         = display
+        self.velocity        = [0, 0]
+        self.position        = [x, y]
+        self.rect            = pygame.Rect(0,0, 24,24)
+        self.collision_rect  = pygame.Rect(0,0, 14,16)
+        # self.collision_list  = []
+        # self.collision_range = []
+        
         # reverse = left
         # could change this out for a + or - velocity check instead
         # and then multiply velocity by -1
-        self.reverse        = True
-        self.speed          = 20
-        self.ground_rect    = pygame.Rect(0,0, TILE_SIZE,TILE_SIZE)
+        self.reverse     = True
+        self.ground_rect = pygame.Rect(0,0, TILE_SIZE,TILE_SIZE) 
+        self.wall_rect   = pygame.Rect(0,0, TILE_SIZE,TILE_SIZE)
+        
+        self.animation_state_manager = self.Animation_State_Manager('jump')
+        self.animation_jump          = self.Animation_Jump(display, sprites)
+        self.animation_states        = {'jump': self.animation_jump}
         
     # carry out enemy logic, set velocity and direction, and set animation states
     def AI(self, dt, tilemap, TILE_SIZE):
-        self.collision_list = self.check_collisions(tilemap, TILE_SIZE)
+        self.collision_list = self.check_collisions(TILE_SIZE)
         grounded = self.check_ground(tilemap, TILE_SIZE)
         
         if self.reverse:
-            for col in self.collision_list:
-                if col.right > self.rect.left:
-                    self.position[0] = col.right
-                    self.reverse = False 
+            # all I really need is the y and x coordinates of wall_rect, really. Rect could be a waste
+            if tilemap[int(self.wall_rect.y / TILE_SIZE)][int(self.wall_rect.x / TILE_SIZE)] == 1:
+                if self.wall_rect.right > self.collision_rect.left:
+                     self.collision_rect.left = self.wall_rect.right
+                     self.reverse = False 
             if grounded == False:
-                self.reverse = False
+                 self.reverse = False
         else:
-            for col in self.collision_list:            
-                if col.left < self.rect.right:
-                    self.position[0] = col.left - TILE_SIZE
+            if tilemap[int(self.wall_rect.y / TILE_SIZE)][int(self.wall_rect.x / TILE_SIZE)] == 1:
+                if self.wall_rect.left < self.collision_rect.right:
+                    self.collision_rect.right = self.wall_rect.left
                     self.reverse = True
             if grounded == False:
                 self.reverse = True
                     
         if self.reverse:
-            self.velocity[0] = dt * self.speed * -1
+            self.velocity[0] = dt * SPEED * -1
         else:
-            self.velocity[0] = dt * self.speed
+            self.velocity[0] = dt * SPEED
             
         self.position[0] += self.velocity[0]
         self.rect.x       = int(self.position[0])
-        self.rect.y       = int(self.position[1])
+        self.rect.y       = int(self.position[1]) - 8
+        self.collision_rect.midbottom = self.rect.midbottom
         
     # apply velocity to enemy
     def update(self, dt, tilemap, TILE_SIZE):
         self.AI(dt, tilemap, TILE_SIZE)
         
     # render that shit
-    def render(self, offset_x):
-        self.show_collision_check_list(offset_x)
+    def render(self, offset_x, dt):
         rect = self.rect.copy()
         rect.x -= offset_x
-        pygame.draw.rect(self.display, (200,50,50), rect)
-        
+        col_rect = self.collision_rect.copy()
+        col_rect.x -= offset_x
+        wall_rect = self.wall_rect.copy()
+        wall_rect.x -= offset_x
         ground_rect = self.ground_rect.copy()
         ground_rect.x -= offset_x
-        pygame.draw.rect(self.display, (150,150,200), ground_rect)
+        
+        pygame.draw.rect(self.display, (250,100,100), col_rect, 2)        
+        pygame.draw.rect(self.display, (200,200,200), wall_rect, 2)
+        pygame.draw.rect(self.display, (150,150,200), ground_rect, 2)
+        self.animation_states[self.animation_state_manager.get_state()].run(rect, self.reverse, dt)
         
     # just gonna check for x-axis collisions here
-    def check_collisions(self, tilemap, TILE_SIZE):
-        check_list = []
-        for i in range(-1, 1):
-            # seems like things are a bit sideways...
-            grid_y = int((self.position[1]) / TILE_SIZE)                  
-            grid_x = int((self.position[0]) / TILE_SIZE + i + 1)
+    def check_collisions(self, TILE_SIZE):
+        rect = None
+        
+        if self.reverse:
+            rect = pygame.Rect(int(self.collision_rect.centerx / TILE_SIZE - 1) * TILE_SIZE, int(self.collision_rect.centery / TILE_SIZE) * TILE_SIZE, TILE_SIZE, TILE_SIZE)
+        else:
+            rect = pygame.Rect(int(self.collision_rect.centerx / TILE_SIZE + 1) * TILE_SIZE, int(self.collision_rect.centery / TILE_SIZE) * TILE_SIZE, TILE_SIZE, TILE_SIZE)
             
-            if tilemap[grid_y][grid_x] == 1:
-                rect = pygame.Rect(grid_x * TILE_SIZE, grid_y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
-                check_list.append(rect)
-                
-        return check_list
-    
+        self.wall_rect = rect
+
     # returns true if ground is ahead. False otherwise
     def check_ground(self, tilemap, TILE_SIZE):  
         rect = None
         
         if self.reverse:
-            rect = pygame.Rect(int(self.position[0] / TILE_SIZE) * TILE_SIZE, int(self.position[1] / TILE_SIZE + 1) * TILE_SIZE, TILE_SIZE, TILE_SIZE)
+            rect = pygame.Rect(int(self.collision_rect.centerx / TILE_SIZE) * TILE_SIZE, int(self.collision_rect.centery / TILE_SIZE + 1) * TILE_SIZE, TILE_SIZE, TILE_SIZE)
         else:
-            rect = pygame.Rect(int(self.position[0] / TILE_SIZE + 1) * TILE_SIZE, int(self.position[1] / TILE_SIZE + 1) * TILE_SIZE, TILE_SIZE, TILE_SIZE)
+            rect = pygame.Rect(int(self.collision_rect.centerx / TILE_SIZE) * TILE_SIZE, int(self.collision_rect.centery / TILE_SIZE + 1) * TILE_SIZE, TILE_SIZE, TILE_SIZE)
                 
         self.ground_rect = rect
         # print(tilemap[int(rect.y / TILE_SIZE)][int(rect.x / TILE_SIZE)])
@@ -95,12 +109,6 @@ class enemy(pygame.sprite.Sprite):
         else:
             return True
 
-    # displays the tiles in range for collision checks
-    def show_collision_check_list(self, offset_x):
-        for rect in self.collision_list:
-            rect.x -= offset_x
-            pygame.draw.rect(self.display, (150,200,150), rect)
-    
     class Animation_State_Manager:
         def __init__(self, current_state):
             self.current_state = current_state
@@ -110,6 +118,27 @@ class enemy(pygame.sprite.Sprite):
         
         def set_state(self, state):
             self.current_state = state
-
+            
+    class Animation_Jump:
+        def __init__(self, display, sprites):
+            self.display    = display
+            self.sprites    = sprites
+            self.frame      = 0
+            self.true_frame = 0.0
+            
+        def run(self, rect, reverse, dt):
+            if reverse == True:
+                reverse_sprite = pygame.transform.flip(self.sprites[self.frame], True, False)
+                self.display.blit(reverse_sprite, rect)
+            else:
+                self.display.blit(self.sprites[self.frame], rect)
+            self.true_frame += dt * ANIMATION_SPEED
+            if self.true_frame >= 1:
+                self.frame += 1
+                self.true_frame -= 1
+                print(len(self.sprites))
+                if self.frame > len(self.sprites) - 1:
+                    self.frame = 0
+                    
 if __name__ == '__main__':
     pass

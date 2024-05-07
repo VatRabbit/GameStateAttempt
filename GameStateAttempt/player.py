@@ -12,9 +12,9 @@ MISC:
 - Swap out for global variables. They're better for values that can be tweaked
 '''
 
-JUMP                 = -4
+JUMP                 = -3.5
+GRAVITY              = 12
 SPEED                = 150
-COYOTE_LIMIT         = 0.1
 ANIMATION_SPEED_RUN  = 14
 ANIMATION_SPEED_IDLE = 8
 
@@ -48,9 +48,6 @@ class Player(pygame.sprite.Sprite):
         
         self.last_y              = 0.0        
         self.terminal_velocity   = 5
-        self.g_acceleration      = 15
-        self.jump                = -4
-        self.speed               = 175
         self.coyote_limit        = 0.1
         self.coyote_time         = 0.0
         self.jump_buffer         = 0.0
@@ -106,10 +103,8 @@ class Player(pygame.sprite.Sprite):
         self.position[1] += self.velocity[1]
         self.collision_rect.bottom = self.position[1]
         
-    def apply_gravity(self, dt):
-         gravity_change = self.g_acceleration * dt 
-         gravity_change_scaled = gravity_change
-         self.velocity[1] += gravity_change_scaled    
+    def apply_gravity(self, dt):         
+         self.velocity[1] += GRAVITY * dt    
          if self.velocity[1] > self.terminal_velocity:
              self.velocity[1] = self.terminal_velocity
 
@@ -137,6 +132,7 @@ class Player(pygame.sprite.Sprite):
             pygame.draw.rect(self.display, (100,100,250), rect)
 
     def handle_x_collisions(self):
+        # max of 8
         tollerance = 8
         
         for rect in self.collision_list:
@@ -154,7 +150,7 @@ class Player(pygame.sprite.Sprite):
                     self.velocity[0] = 0
                 
     def handle_y_collisions(self):
-        # max of 8
+        
         tollerance = 8
         
         for rect in self.collision_list:
@@ -175,7 +171,7 @@ class Player(pygame.sprite.Sprite):
              for event in events:
                  if event.type == pygame.KEYDOWN:
                      if event.key == pygame.K_SPACE:
-                         self.velocity[1] = self.jump
+                         self.velocity[1] = JUMP
                          
         '''
         elif self.double_jump_ready == True:
@@ -198,7 +194,7 @@ class Player(pygame.sprite.Sprite):
         elif keys[pygame.K_LEFT] == True:
             self.animation_state_manager.set_state('run')
             self.reverse = True
-            self.velocity[0] = -self.speed * dt
+            self.velocity[0] = -SPEED * dt
             
             for event in events:
                 if event.type == pygame.KEYDOWN:
@@ -208,7 +204,7 @@ class Player(pygame.sprite.Sprite):
         elif keys[pygame.K_RIGHT] == True:
             self.animation_state_manager.set_state('run')
             self.reverse = False
-            self.velocity[0] = self.speed * dt
+            self.velocity[0] = SPEED * dt
             
             for event in events:
                 if event.type == pygame.KEYDOWN:

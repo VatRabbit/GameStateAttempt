@@ -70,13 +70,11 @@ class Game:
             if self.logic_dt >= 1.0 / LOGIC_FPS:                            
                 self.update_logic()       
                 self.logic_dt -= 1.0 / LOGIC_FPS
-                self.events = []
-                # print('logic')                
+                self.events = []               
               
             if self.render_dt >= 1.0 / RENDER_FPS:                
                 self.render(self.render_dt, self.display)             
                 self.render_dt -= 1.0 / RENDER_FPS
-                # print('render')
                         
     def update_logic(self):
         self.last_logic = time.time()
@@ -87,9 +85,8 @@ class Game:
         self.states[self.game_state_manager.get_state()].render(self.render_dt, display)
         self.scaled_display = pygame.transform.scale(self.display, (display.get_width() * DISPLAY_SCALE, display.get_height() * DISPLAY_SCALE))
         display.blit(self.scaled_display, (0,0))
-        pygame.display.flip()
-        # print('render')
-        
+        pygame.display.flip()        
+
     def timer(self):
         current_time = time.time()
         self.dt = current_time - self.last_update
@@ -124,14 +121,14 @@ class Game:
             # currently a 28x10 map            
             self.tilemap = [
                 [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-                [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,0,0,0,0,0,0,0,0,0,0,0,1],
                 [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,1],
                 [1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-                [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,0,0,0,0,1],
                 [1,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,1],
                 [1,0,0,1,1,1,0,0,0,0,0,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-                [1,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-                [1,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,1],
+                [1,0,0,0,0,0,0,0,0,0,1,1,1,0,0,3,0,0,0,0,0,0,0,0,0,0,0,1],
+                [1,0,0,0,0,0,3,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,1],
                 [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
             ]
             
@@ -159,8 +156,7 @@ class Game:
                 sprite.render(self.offset_x, dt)            
             self.enemy_group.draw(display)
             
-            self.player.render(self.offset_x, dt, display)            
-            # print('rendering level')
+            self.player.render(self.offset_x, dt, display)
             
         def render_tiles(self):
             for rect in self.tilemap_rect_list:

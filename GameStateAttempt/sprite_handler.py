@@ -18,11 +18,9 @@ class sprite_handler():
         sprites = []
         sprite_sheet = pygame.image.load(f"sprites/{sprite_sheet}.png").convert_alpha()        
         sprite_sheet_width  = sprite_sheet.get_width()
-        # print(f"width, height : {sprite_sheet.get_width(), sprite_sheet.get_height()}")
         sprite_sheet_height = sprite_sheet.get_height()
         sprite_width  = sprite_sheet_width // cols
         sprite_height = sprite_sheet_height // rows
-        # print(f"sprite width, sprite height : {sprite_width, sprite_height}")
         
         for y in range(rows):
             for x in range(cols):    

@@ -15,20 +15,18 @@ ANIMATION_SPEED = 7
 class enemy(pygame.sprite.Sprite):
     def __init__(self, display, x, y, TILE_SIZE, sprites):
         super().__init__()
-        self.display         = display
-        self.velocity        = [0, 0]
-        self.position        = [x, y]
-        self.rect            = pygame.Rect(0,0, 24,24)
-        self.collision_rect  = pygame.Rect(0,0, 14,16)
-        self.image           = pygame.Surface((24,24))
-        
-        # could change this out for a + or - velocity check instead
-        # and then multiply velocity by -1?
+        self.display       = display
         self.reverse       = True
+        self.velocity      = [0, 0]
+        self.position      = [x, y]        
         self.reverse_timer = 0.0
         self.reverse_cd    = 0.1
-        self.ground_rect   = pygame.Rect(0,0, TILE_SIZE,TILE_SIZE) 
-        self.wall_rect     = pygame.Rect(0,0, TILE_SIZE,TILE_SIZE)
+        
+        self.image          = pygame.Surface((24,24))        
+        self.rect           = pygame.Rect(0,0, 24,24)
+        self.collision_rect = pygame.Rect(0,0, 14,16)        
+        self.ground_rect    = pygame.Rect(0,0, TILE_SIZE,TILE_SIZE) 
+        self.wall_rect      = pygame.Rect(0,0, TILE_SIZE,TILE_SIZE)  
         
         self.animation_state_manager = self.Animation_State_Manager('jump')
         self.animation_jump          = self.Animation_Jump(sprites)
@@ -124,7 +122,6 @@ class enemy(pygame.sprite.Sprite):
             self.frame      = 0
             self.true_frame = 0.0
             
-        # maybe have this return an image instead
         def run(self, reverse, dt):
             self.true_frame += dt * ANIMATION_SPEED           
             

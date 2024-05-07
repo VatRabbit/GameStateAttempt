@@ -12,9 +12,11 @@ MISC:
 - Swap out for global variables. They're better for values that can be tweaked
 '''
 
-JUMP = -4
-SPEED = 175
-COYOTE_LIMIT = 0.1
+JUMP                 = -4
+SPEED                = 175
+COYOTE_LIMIT         = 0.1
+ANIMATION_SPEED_RUN  = 12
+ANIMATION_SPEED_IDLE = 10
 
 import pygame
 
@@ -90,8 +92,6 @@ class Player(pygame.sprite.Sprite):
         self.update_player_rect()
         self.coyote_counter(dt)
         
-        # print(f"player position - {self.position}")
-        
     def render(self, offset_x, dt, display):
         self.rect.x -= offset_x
         self.show_collision_check_list(offset_x)
@@ -101,7 +101,6 @@ class Player(pygame.sprite.Sprite):
     def update_x_velocity(self):
         self.position[0] += self.velocity[0]
         self.collision_rect.left = self.position[0]
-        # print(f"self.collision_rect.left:{self.collision_rect.left}")
         
     def update_y_velocity(self):
         self.position[1] += self.velocity[1]
@@ -115,7 +114,6 @@ class Player(pygame.sprite.Sprite):
              self.velocity[1] = self.terminal_velocity
 
     def update_player_rect(self):
-        # self.collision_rect.bottomleft = self.position[0], self.position[1]
         self.rect.midbottom = self.collision_rect.midbottom
      
     def check_collisions(self, tilemap):
@@ -172,7 +170,6 @@ class Player(pygame.sprite.Sprite):
         
     def handle_input(self, events, dt):
         keys = pygame.key.get_pressed() 
-        # print(keys)
 
         if self.is_grounded or self.coyote_time <= self.coyote_limit:
              for event in events:
@@ -244,11 +241,10 @@ class Player(pygame.sprite.Sprite):
         def __init__(self, sprites):            
             self.sprites     = sprites
             self.true_frame  = 0.0
-            self.frame       = 0                        
-            self.speed       = 10
+            self.frame       = 0                                    
             
         def run(self, reverse, dt):
-            self.true_frame += dt * self.speed
+            self.true_frame += dt * ANIMATION_SPEED_IDLE
             
             if self.true_frame >= 1:                
                 self.frame += 1
@@ -277,11 +273,10 @@ class Player(pygame.sprite.Sprite):
         def __init__(self, sprites):
             self.sprites     = sprites
             self.true_frame  = 0.0
-            self.frame       = 0                        
-            self.speed       = 12
+            self.frame       = 0  
             
         def run(self, reverse, dt):
-            self.true_frame += dt * self.speed
+            self.true_frame += dt * ANIMATION_SPEED_RUN
             
             if self.true_frame >= 1:                
                 self.frame += 1     

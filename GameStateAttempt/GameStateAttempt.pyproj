@@ -27,6 +27,7 @@
     <Compile Include="sprite_handler.py" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="audio\" />
     <Folder Include="sprites\" />
     <Folder Include="__pycache__\" />
   </ItemGroup>

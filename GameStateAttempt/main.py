@@ -1,16 +1,16 @@
 '''
 TO ADD:
-- enemy
 - jump buffer
 - variable jump height
 - more optimizion by only rendering visible tiles
 - sound class to load and handout music and sfx
 - paralax scrolling bg 
 - actual sprites some day
+- use spritegroup functionality for enemies (self.kill() will remove sprites)
+- look into spritecollide()
+- event_handler methods for handling input
 
 ISSUES:
-- jumping not consistent on different frame rates
-- maybe have more delta time issue
 - figure out perfect center on camera by drawing lines or something
 '''
 
@@ -80,10 +80,7 @@ class Game:
                 self.render()             
                 self.render_dt -= 1.0 / RENDER_FPS
                 # print('render')
-                
-            # self.logic_clock.tick()
-            # self.render_clock.tick(RENDER_FPS)
-        
+                        
     def update_logic(self):
         self.last_logic = time.time()
         self.states[self.game_state_manager.get_state()].run(self.events, self.logic_dt, self.sprite_handler)  
@@ -116,7 +113,7 @@ class Game:
             self.offset_x = 0 
             self.first_run = True
             self.tilemap_rect_list = []            
-            self.enemy_list = []
+            self.enemy_group = pygame.sprite.Group()
             self.camera_follow_multiplyer = 10
             
             # y then x for these (it's sideways :/ )
@@ -134,7 +131,13 @@ class Game:
                 [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
             ]
             
-        def run(self, events, dt, sprite_handler):    
+        def run(self, events, dt, sprite_handler):
+            for event in events:
+                 if event.type == pygame.KEYUP:
+                     if event.key == pygame.K_DELETE:
+                          self.enemy_group.empty()                   
+                          print('del')
+                     
             if self.first_run:
                 self.tilemap_rect_list = self.create_tile_rects(sprite_handler)    
                 self.first_run = False                
@@ -142,15 +145,15 @@ class Game:
             self.camera()              
             
             self.player.update(events, dt, self.tilemap)
-            for enemy in self.enemy_list:
-                enemy.update(dt, self.tilemap, TILE_SIZE)
+            self.enemy_group.update(dt, self.tilemap, TILE_SIZE)
         
         def render(self, dt):
             self.display.fill((110, 140, 140))
-            self.render_tiles()                     
-            for enemy in self.enemy_list:
-                enemy.render(self.offset_x, dt)
-            self.player.render(self.offset_x)
+            self.render_tiles()                       
+            # self.enemy_group.draw(self.display)                    
+            for sprite in self.enemy_group:
+                sprite.render(self.offset_x, dt)
+            self.player.render(self.offset_x)          
             # print('rendering level')
             
         def render_tiles(self):
@@ -198,7 +201,7 @@ class Game:
                         pos_x = y * TILE_SIZE
                         pos_y = x * TILE_SIZE                        
                         new_enemy = enemy.enemy(self.display, pos_x, pos_y, TILE_SIZE, sprite_handler.bunny_jump)
-                        self.enemy_list.append(new_enemy)
+                        self.enemy_group.add(new_enemy)
 
             return rect_list
                 

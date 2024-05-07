@@ -1,5 +1,8 @@
 '''
 To Do:
+- have enemies reverse direction when colliding with eachother
+- could have some issues with the reverse cd with multiple enemies 
+- in a tight area together
 
 ISSUES:
 '''
@@ -19,7 +22,7 @@ class enemy(pygame.sprite.Sprite):
         self.collision_rect  = pygame.Rect(0,0, 14,16)
         
         # could change this out for a + or - velocity check instead
-        # and then multiply velocity by -1
+        # and then multiply velocity by -1?
         self.reverse       = True
         self.reverse_timer = 0.0
         self.reverse_cd    = 0.1
@@ -75,17 +78,7 @@ class enemy(pygame.sprite.Sprite):
     # render that shit
     def render(self, offset_x, dt):
         rect = self.rect.copy()
-        rect.x -= offset_x
-        col_rect = self.collision_rect.copy()
-        col_rect.x -= offset_x
-        wall_rect = self.wall_rect.copy()
-        wall_rect.x -= offset_x
-        ground_rect = self.ground_rect.copy()
-        ground_rect.x -= offset_x
-        
-        pygame.draw.rect(self.display, (250,100,100), col_rect, 2)        
-        pygame.draw.rect(self.display, (200,200,200), wall_rect, 2)
-        pygame.draw.rect(self.display, (150,150,200), ground_rect, 2)
+        rect.x -= offset_x        
         self.animation_states[self.animation_state_manager.get_state()].run(rect, self.reverse, dt)
         
     # just gonna check for x-axis collisions here

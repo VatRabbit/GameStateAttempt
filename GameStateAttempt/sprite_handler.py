@@ -1,3 +1,9 @@
+'''
+ISSUES:
+- Maybe change these animation lists into dictionaries 
+- cols and rows are backwards in load_sprite_sheet()
+'''
+
 import pygame
 
 class sprite_handler():
@@ -57,7 +63,5 @@ class sprite_handler():
         # self.bunny_jump = [sprites[0], sprites[1], sprites[2]]
         # self.bunny_jump = [pygame.transform.scale(sprite, 16) for sprite in self.bunny_jump:
             
-        
-    
 if __name__ == '__main__':
     pass

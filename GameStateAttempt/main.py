@@ -156,12 +156,10 @@ class Game:
             self.render_tiles()                       
                                 
             for sprite in self.enemy_group:
-                sprite.render(self.offset_x, dt)
-                
-            # print(type(display))
-            
+                sprite.render(self.offset_x, dt)            
             self.enemy_group.draw(display)
-            self.player.render(self.offset_x)          
+            
+            self.player.render(self.offset_x, dt, display)            
             # print('rendering level')
             
         def render_tiles(self):

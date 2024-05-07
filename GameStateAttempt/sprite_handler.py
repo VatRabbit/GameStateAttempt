@@ -59,9 +59,6 @@ class sprite_handler():
         self.bunny_jump = []
         for sprite in sprites:
             self.bunny_jump.append(pygame.transform.scale(sprite, (24,24)))
-        
-        # self.bunny_jump = [sprites[0], sprites[1], sprites[2]]
-        # self.bunny_jump = [pygame.transform.scale(sprite, 16) for sprite in self.bunny_jump:
             
 if __name__ == '__main__':
     pass

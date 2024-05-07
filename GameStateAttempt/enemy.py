@@ -66,12 +66,10 @@ class enemy(pygame.sprite.Sprite):
             self.velocity[0] = dt * SPEED
         
         self.reverse_timer += dt
-        # print(self.reverse_timer)
         self.position[0] += self.velocity[0]
         self.rect.x       = int(self.position[0])
         self.rect.y       = int(self.position[1]) - (self.rect.height - TILE_SIZE)
         self.collision_rect.midbottom = self.rect.midbottom
-        # self.image = self.animation_states
         
     # apply velocity to enemy
     def update(self, dt, tilemap, TILE_SIZE):
@@ -83,6 +81,7 @@ class enemy(pygame.sprite.Sprite):
         self.image = self.animation_states[self.animation_state_manager.get_state()].run(self.reverse, dt)
         
     # just gonna check for x-axis collisions here
+    # maybe should combine the two collision check methods eventually    
     def check_collisions(self, TILE_SIZE):
         rect = None
         
@@ -103,7 +102,6 @@ class enemy(pygame.sprite.Sprite):
             rect = pygame.Rect(int(self.collision_rect.centerx / TILE_SIZE) * TILE_SIZE, int(self.collision_rect.centery / TILE_SIZE + 1) * TILE_SIZE, TILE_SIZE, TILE_SIZE)
                 
         self.ground_rect = rect
-        # print(tilemap[int(rect.y / TILE_SIZE)][int(rect.x / TILE_SIZE)])
         
         if tilemap[int(rect.y / TILE_SIZE)][int(rect.x / TILE_SIZE)] == 0:
             return False            
@@ -128,20 +126,17 @@ class enemy(pygame.sprite.Sprite):
             
         # maybe have this return an image instead
         def run(self, reverse, dt):
-            self.true_frame += dt * ANIMATION_SPEED
-            print(reverse)
+            self.true_frame += dt * ANIMATION_SPEED           
             
             if self.true_frame >= 1:
                 self.frame += 1
-                self.true_frame -= 1                
+                self.true_frame -= 1
                 if self.frame > len(self.sprites) - 1:
                     self.frame = 0
                     
-            if reverse:
-                print('reverse')
+            if reverse:                
                 return pygame.transform.flip(self.sprites[self.frame], True, False)                                                 
-            else:
-                print('not reverse')
+            else:                
                 return self.sprites[self.frame]                                
                 
 if __name__ == '__main__':

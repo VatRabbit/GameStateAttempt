@@ -25,12 +25,13 @@ class Player(pygame.sprite.Sprite):
         super().__init__()
         self.display = display       
                 
-        self.animation_idle          = self.Animation_Idle(display, sprites_idle)
-        self.animation_run           = self.Animation_Run(display, sprites_run)
-        self.animation_jump          = self.Animation_Jump(display, sprites_jump)        
+        self.animation_idle          = self.Animation_Idle(sprites_idle)
+        self.animation_run           = self.Animation_Run(sprites_run)
+        self.animation_jump          = self.Animation_Jump(sprites_jump)        
         self.animation_state_manager = self.Animation_State_Manager('idle')
         self.animation_states        = {'idle': self.animation_idle, 'run': self.animation_run, 'jump': self.animation_jump}        
          
+        self.image          = pygame.Surface((32,32))
         self.rect           = pygame.Rect(0,0, 32,32)
         self.collision_rect = pygame.Rect(0,0,  9,20)
         self.collision_list = []
@@ -68,13 +69,13 @@ class Player(pygame.sprite.Sprite):
 
     def coyote_counter(self, dt):
         if self.is_grounded == False:
-            self.coyote_time += dt  
+            self.coyote_time += dt
         else:
             self.coyote_time = 0.0
 
     def update(self, events, dt, tilemap):
         self.handle_input(events, dt)
-        self.collision_list = self.check_collisions(tilemap) 
+        self.collision_list = self.check_collisions(tilemap)
         
         # handle self.position[0], left/right movement and check left/right collisions 
         self.update_x_velocity()
@@ -82,19 +83,20 @@ class Player(pygame.sprite.Sprite):
                 
         # handle self.position[1], up/down movement and check for up/down collisions
         self.apply_gravity(dt)
-        self.update_y_velocity()   
-        self.check_grounded()               
-        self.handle_y_collisions()        
+        self.update_y_velocity()
+        self.check_grounded()
+        self.handle_y_collisions()
           
         self.update_player_rect()
         self.coyote_counter(dt)
         
         # print(f"player position - {self.position}")
         
-    def render(self, offset_x):
+    def render(self, offset_x, dt, display):
         self.rect.x -= offset_x
         self.show_collision_check_list(offset_x)
-        self.animation_states[self.animation_state_manager.get_state()].run(self.rect, self.reverse)
+        self.image = self.animation_states[self.animation_state_manager.get_state()].run(self.reverse, dt)
+        display.blit(self.image, self.rect)
         
     def update_x_velocity(self):
         self.position[0] += self.velocity[0]
@@ -237,65 +239,61 @@ class Player(pygame.sprite.Sprite):
         
         def set_state(self, state):
             self.current_state = state
-        
+                    
     class Animation_Idle:
-        def __init__(self, display, sprites):
-            self.display = display
-            self.frame = 0
-            self.animation_cooldown = 125
-            self.last_update = pygame.time.get_ticks()
-            self.sprites = sprites
+        def __init__(self, sprites):            
+            self.sprites     = sprites
+            self.true_frame  = 0.0
+            self.frame       = 0                        
+            self.speed       = 10
             
-        def run(self, rect, reverse):
-            current_time = pygame.time.get_ticks()
+        def run(self, reverse, dt):
+            self.true_frame += dt * self.speed
             
-            if (current_time - self.last_update >= self.animation_cooldown):
+            if self.true_frame >= 1:                
                 self.frame += 1
-                self.last_update = current_time
-                if (self.frame >= len(self.sprites)):
-                    self.frame = 0
-            
-            if reverse == True:
-                reverse_sprite = pygame.transform.flip(self.sprites[self.frame], True, False)
-                self.display.blit(reverse_sprite, rect)
-            else:
-                self.display.blit(self.sprites[self.frame], rect)
-                
-    class Animation_Jump:
-        def __init__(self, display, sprites):
-            self.display = display
-            self.sprites = sprites
-            self.frame = 0
-            
-        def run(self, rect, reverse):
-            if reverse == True:
-                reverse_sprite = pygame.transform.flip(self.sprites[self.frame], True, False)
-                self.display.blit(reverse_sprite, rect)
-            else:
-                self.display.blit(self.sprites[self.frame], rect)
-                
-    class Animation_Run:
-        def __init__(self, display, sprites):
-            self.display = display
-            self.frame = 0
-            self.animation_cooldown = 75
-            self.last_update = pygame.time.get_ticks()
-            self.sprites = sprites
-            
-        def run(self, rect, reverse):
-            current_time = pygame.time.get_ticks()
-            
-            if (current_time - self.last_update >= self.animation_cooldown):
-                self.frame += 1
-                self.last_update = current_time
-                if (self.frame >= len(self.sprites)):
+                self.true_frame -= 1
+                if self.frame > len(self.sprites) - 1:
                     self.frame = 0
                     
-            if reverse == True:
+            if reverse:
                 reverse_sprite = pygame.transform.flip(self.sprites[self.frame], True, False)
-                self.display.blit(reverse_sprite, rect)
+                return reverse_sprite                
             else:
-                self.display.blit(self.sprites[self.frame], rect)
+                return self.sprites[self.frame]
+                
+    class Animation_Jump:
+        def __init__(self, sprites):
+            self.sprites     = sprites
+            
+        def run(self, reverse, dt):                    
+            if reverse:
+                reverse_sprite = pygame.transform.flip(self.sprites[0], True, False)
+                return reverse_sprite
+            else:
+                return self.sprites[0]
+                
+    class Animation_Run:
+        def __init__(self, sprites):
+            self.sprites     = sprites
+            self.true_frame  = 0.0
+            self.frame       = 0                        
+            self.speed       = 12
+            
+        def run(self, reverse, dt):
+            self.true_frame += dt * self.speed
+            
+            if self.true_frame >= 1:                
+                self.frame += 1     
+                self.true_frame -= 1
+                if self.frame > len(self.sprites) - 1:
+                    self.frame = 0
+                    
+            if reverse:
+                reverse_sprite = pygame.transform.flip(self.sprites[self.frame], True, False)
+                return reverse_sprite
+            else:
+                return self.sprites[self.frame]
 
 if __name__ == '__main__':
     pass

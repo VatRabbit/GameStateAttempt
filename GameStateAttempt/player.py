@@ -13,10 +13,10 @@ MISC:
 '''
 
 JUMP                 = -4
-SPEED                = 175
+SPEED                = 150
 COYOTE_LIMIT         = 0.1
-ANIMATION_SPEED_RUN  = 12
-ANIMATION_SPEED_IDLE = 10
+ANIMATION_SPEED_RUN  = 14
+ANIMATION_SPEED_IDLE = 8
 
 import pygame
 

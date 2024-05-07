@@ -11,19 +11,19 @@ class sprite_handler():
         self.load_sprites()
         
     def load_sprites(self):
-        self.load_player_sprites()  
+        self.load_player_sprites()
         self.load_bunny_sprites()
 
-    def load_sprite_sheet(self, sprite_sheet, cols, rows):        
+    def load_sprite_sheet(self, sprite_sheet, cols, rows):
         sprites = []
-        sprite_sheet = pygame.image.load(f"sprites/{sprite_sheet}.png").convert_alpha()        
+        sprite_sheet = pygame.image.load(f"sprites/{sprite_sheet}.png").convert_alpha()
         sprite_sheet_width  = sprite_sheet.get_width()
         sprite_sheet_height = sprite_sheet.get_height()
         sprite_width  = sprite_sheet_width // cols
         sprite_height = sprite_sheet_height // rows
         
         for y in range(rows):
-            for x in range(cols):    
+            for x in range(cols):
                 sprite_x = x * sprite_width
                 sprite_y = y * sprite_height
                 
@@ -43,7 +43,7 @@ class sprite_handler():
         return sprites
         
     def load_player_sprites(self):
-        sprites = self.load_sprite_sheet("player", 6, 6)   
+        sprites = self.load_sprite_sheet("player", 6, 6)
     
         self.player_idle   = [sprites[ 0], sprites[ 1], sprites[ 2], sprites[ 3]                        ]
         self.player_run    = [sprites[ 4], sprites[ 5], sprites[ 6], sprites[ 7], sprites[8], sprites[9]]

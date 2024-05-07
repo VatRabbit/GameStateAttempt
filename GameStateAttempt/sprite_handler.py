@@ -22,7 +22,7 @@ class sprite_handler():
         sprite_sheet_height = sprite_sheet.get_height()
         sprite_width  = sprite_sheet_width // cols
         sprite_height = sprite_sheet_height // rows
-        print(f"sprite width, sprite height : {sprite_width, sprite_height}")
+        # print(f"sprite width, sprite height : {sprite_width, sprite_height}")
         
         for y in range(rows):
             for x in range(cols):    

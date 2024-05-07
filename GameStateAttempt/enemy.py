@@ -20,6 +20,7 @@ class enemy(pygame.sprite.Sprite):
         self.position        = [x, y]
         self.rect            = pygame.Rect(0,0, 24,24)
         self.collision_rect  = pygame.Rect(0,0, 14,16)
+        self.image           = pygame.Surface((24,24))
         
         # could change this out for a + or - velocity check instead
         # and then multiply velocity by -1?
@@ -30,7 +31,7 @@ class enemy(pygame.sprite.Sprite):
         self.wall_rect     = pygame.Rect(0,0, TILE_SIZE,TILE_SIZE)
         
         self.animation_state_manager = self.Animation_State_Manager('jump')
-        self.animation_jump          = self.Animation_Jump(display, sprites)
+        self.animation_jump          = self.Animation_Jump(sprites)
         self.animation_states        = {'jump': self.animation_jump}
         
     # carry out enemy logic, set velocity and direction, and set animation states
@@ -70,16 +71,16 @@ class enemy(pygame.sprite.Sprite):
         self.rect.x       = int(self.position[0])
         self.rect.y       = int(self.position[1]) - (self.rect.height - TILE_SIZE)
         self.collision_rect.midbottom = self.rect.midbottom
+        # self.image = self.animation_states
         
     # apply velocity to enemy
     def update(self, dt, tilemap, TILE_SIZE):
         self.AI(dt, tilemap, TILE_SIZE)
         
     # render that shit
-    def render(self, offset_x, dt):
-        rect = self.rect.copy()
-        rect.x -= offset_x        
-        self.animation_states[self.animation_state_manager.get_state()].run(rect, self.reverse, dt)
+    def render(self, offset_x, dt):        
+        self.rect.x -= offset_x        
+        self.image = self.animation_states[self.animation_state_manager.get_state()].run(self.reverse, dt)
         
     # just gonna check for x-axis collisions here
     def check_collisions(self, TILE_SIZE):
@@ -120,24 +121,28 @@ class enemy(pygame.sprite.Sprite):
             self.current_state = state
             
     class Animation_Jump:
-        def __init__(self, display, sprites):
-            self.display    = display
+        def __init__(self, sprites):
             self.sprites    = sprites
             self.frame      = 0
             self.true_frame = 0.0
             
-        def run(self, rect, reverse, dt):
-            if reverse == True:
-                reverse_sprite = pygame.transform.flip(self.sprites[self.frame], True, False)
-                self.display.blit(reverse_sprite, rect)
-            else:
-                self.display.blit(self.sprites[self.frame], rect)
+        # maybe have this return an image instead
+        def run(self, reverse, dt):
             self.true_frame += dt * ANIMATION_SPEED
+            print(reverse)
+            
             if self.true_frame >= 1:
                 self.frame += 1
                 self.true_frame -= 1                
                 if self.frame > len(self.sprites) - 1:
                     self.frame = 0
                     
+            if reverse:
+                print('reverse')
+                return pygame.transform.flip(self.sprites[self.frame], True, False)                                                 
+            else:
+                print('not reverse')
+                return self.sprites[self.frame]                                
+                
 if __name__ == '__main__':
     pass

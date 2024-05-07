@@ -1,8 +1,7 @@
-import pygame
-import enemy
+import pygame, enemy
 
 class Level:
-    def __init__(self, display, game_state_manager, player, dt, tile_size, scaled_width):
+    def __init__(self, display, game_state_manager, player, tile_size, scaled_width):
         self.display = display
         self.game_state_manager = game_state_manager
         self.player = player                     

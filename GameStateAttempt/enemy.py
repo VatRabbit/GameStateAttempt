@@ -24,8 +24,7 @@ class enemy(pygame.sprite.Sprite):
         
         self.image          = pygame.Surface((24,24))        
         self.rect           = pygame.Rect(0,0, 24,24)
-        self.collision_rect = pygame.Rect(0,0, 14,16)        
-        self.ground_rect    = pygame.Rect(0,0, TILE_SIZE,TILE_SIZE) 
+        self.collision_rect = pygame.Rect(0,0, 14,16)                
         self.wall_rect      = pygame.Rect(0,0, TILE_SIZE,TILE_SIZE)  
         
         self.animation_state_manager = self.Animation_State_Manager('jump')
@@ -98,8 +97,6 @@ class enemy(pygame.sprite.Sprite):
             rect = pygame.Rect(int(self.collision_rect.centerx / TILE_SIZE) * TILE_SIZE, int(self.collision_rect.centery / TILE_SIZE + 1) * TILE_SIZE, TILE_SIZE, TILE_SIZE)
         else:
             rect = pygame.Rect(int(self.collision_rect.centerx / TILE_SIZE) * TILE_SIZE, int(self.collision_rect.centery / TILE_SIZE + 1) * TILE_SIZE, TILE_SIZE, TILE_SIZE)
-                
-        self.ground_rect = rect
         
         if tilemap[int(rect.y / TILE_SIZE)][int(rect.x / TILE_SIZE)] == 0:
             return False            

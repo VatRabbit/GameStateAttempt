@@ -15,8 +15,7 @@ ISSUES:
 - figure out perfect center on camera by drawing lines or something
 '''
 
-import pygame, time, player, level, menu
-from sprite_handler import sprite_handler
+import pygame, time, player, level, menu, sprite_handler
 from sys import exit
 
 RENDER_FPS    = 90
@@ -45,14 +44,14 @@ class Game:
         self.last_render  = time.time()
         self.events       = []  
 
-        self.sprite_handler = sprite_handler()
+        self.sprite_handler = sprite_handler.sprite_handler()
         self.sprite_handler.load_sprites()        
 
         self.player = player.Player(self.display, self.sprite_handler.player_idle, self.sprite_handler.player_run, self.sprite_handler.player_jump)
                 
         self.game_state_manager = self.Game_State_Manager('menu')  
         self.menu               = menu.Menu(self.display, self.game_state_manager)
-        self.level              = level.Level(self.display, self.game_state_manager, self.player, self.dt, TILE_SIZE, SCALED_WIDTH)
+        self.level              = level.Level(self.display, self.game_state_manager, self.player, TILE_SIZE, SCALED_WIDTH)
         self.states             = {'level': self.level, 'menu': self.menu}
         
     def main_loop(self):

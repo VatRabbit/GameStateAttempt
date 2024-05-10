@@ -34,6 +34,7 @@
     <Folder Include="__pycache__\" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="sprites\back.png" />
     <Content Include="sprites\bunny.png" />
     <Content Include="sprites\player.png" />
     <Content Include="__pycache__\main.cpython-312.pyc" />

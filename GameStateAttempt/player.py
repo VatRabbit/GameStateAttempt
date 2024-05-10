@@ -12,11 +12,12 @@ MISC:
 - Swap out for global variables. They're better for values that can be tweaked
 '''
 
-JUMP                 = -3.5
+JUMP                 = -4
 GRAVITY              = 12
 SPEED                = 150
 ANIMATION_SPEED_RUN  = 14
 ANIMATION_SPEED_IDLE = 8
+ACCERLATION_RATE     = 1
 
 import pygame
 
@@ -42,9 +43,10 @@ class Player(pygame.sprite.Sprite):
         self.reverse = False
         
         # velocity[0] = left/right, velocity[1] = up/down
-        self.velocity = [0,0]
-        #position[0] = x axis, position[1] = y axis
-        self.position = [0,0]
+        self.velocity     = [0,0]
+        self.position     = [0,0]
+        self.acceleration = 2.5
+        self.max_velocity = 1.25
         
         self.last_y              = 0.0        
         self.terminal_velocity   = 5
@@ -54,23 +56,6 @@ class Player(pygame.sprite.Sprite):
         self.jump_height_counter = 0.0
         self.double_jump_ready   = False
         self.is_grounded         = False
-                
-    def check_grounded(self):
-        tollerance = 1
-        self.is_grounded = False
-        
-        for rect in self.collision_list:
-            if rect.colliderect(self.collision_rect) and self.velocity[1] >= 0:
-                self.is_grounded = True
-                self.velocity[1] = tollerance
-                self.double_jump_ready = True
-                break
-
-    def coyote_counter(self, dt):
-        if self.is_grounded == False:
-            self.coyote_time += dt
-        else:
-            self.coyote_time = 0.0
 
     def update(self, events, dt, tilemap):
         self.handle_input(events, dt)
@@ -78,38 +63,36 @@ class Player(pygame.sprite.Sprite):
         
         # handle self.position[0], left/right movement and check left/right collisions 
         self.update_x_velocity()
-        self.handle_x_collisions()
-                
+        self.handle_x_collisions()        
+
         # handle self.position[1], up/down movement and check for up/down collisions
         self.apply_gravity(dt)
         self.update_y_velocity()
         self.check_grounded()
         self.handle_y_collisions()
-          
+        
         self.update_player_rect()
         self.coyote_counter(dt)
-        
+
     def render(self, offset_x, dt, display):
         self.rect.x -= offset_x
         self.show_collision_check_list(offset_x)
         self.image = self.animation_states[self.animation_state_manager.get_state()].run(self.reverse, dt)
         display.blit(self.image, self.rect)
-        
-    def update_x_velocity(self):
-        self.position[0] += self.velocity[0]
-        self.collision_rect.left = self.position[0]
-        
-    def update_y_velocity(self):
-        self.position[1] += self.velocity[1]
-        self.collision_rect.bottom = self.position[1]
-        
-    def apply_gravity(self, dt):         
-         self.velocity[1] += GRAVITY * dt    
-         if self.velocity[1] > self.terminal_velocity:
-             self.velocity[1] = self.terminal_velocity
 
     def update_player_rect(self):
         self.rect.midbottom = self.collision_rect.midbottom
+        
+    def apply_gravity(self, dt):
+         self.velocity[1] += GRAVITY * dt    
+         if self.velocity[1] > self.terminal_velocity:
+             self.velocity[1] = self.terminal_velocity
+             
+    def coyote_counter(self, dt):
+        if self.is_grounded == False:
+            self.coyote_time += dt
+        else:
+            self.coyote_time = 0.0
      
     def check_collisions(self, tilemap):
         check_list = []
@@ -125,6 +108,17 @@ class Player(pygame.sprite.Sprite):
                           
         return check_list
     
+    def check_grounded(self):
+        tollerance = 1
+        self.is_grounded = False
+        
+        for rect in self.collision_list:
+            if rect.colliderect(self.collision_rect) and self.velocity[1] >= 0:
+                self.is_grounded = True
+                self.velocity[1] = tollerance
+                self.double_jump_ready = True
+                break
+
     # displays the tiles in range for collision checks
     def show_collision_check_list(self, offset_x):
         for rect in self.collision_list:
@@ -134,23 +128,32 @@ class Player(pygame.sprite.Sprite):
     def handle_x_collisions(self):
         # max of 8
         tollerance = 8
+        # this will help player to run over 1-tile gaps
+        y_tollerance = 10
         
         for rect in self.collision_list:
             if rect.colliderect(self.collision_rect):
                 # check for left collision first
+                # also fudge the y a bit
                 if self.collision_rect.left - tollerance <= rect.right <= self.collision_rect.left + tollerance:
-                    self.position[0] = rect.right
-                    self.collision_rect.left = self.position[0]
-                    self.velocity[0] = 0
+                    if rect.top < self.collision_rect.bottom < rect.top + y_tollerance:                        
+                        self.position[1] = rect.top 
+                    else:
+                        self.position[0] = rect.right
+                        self.collision_rect.left = self.position[0]
+                        self.velocity[0] = 0
 
                 # check for right collision next
-                elif self.collision_rect.right + tollerance >= rect.left >= self.collision_rect.right - tollerance:
-                    self.position[0] = rect.left - self.collision_rect.width 
-                    self.collision_rect.left = self.position[0]
-                    self.velocity[0] = 0
+                # also fudge the y a bit        
+                elif self.collision_rect.right + tollerance >= rect.left >= self.collision_rect.right - tollerance:                    
+                    if rect.top < self.collision_rect.bottom < rect.top + y_tollerance:                        
+                        self.position[1] = rect.top 
+                    else:
+                        self.position[0] = rect.left - self.collision_rect.width 
+                        self.collision_rect.left = self.position[0]
+                        self.velocity[0] = 0
                 
-    def handle_y_collisions(self):
-        
+    def handle_y_collisions(self):        
         tollerance = 8
         
         for rect in self.collision_list:
@@ -163,6 +166,14 @@ class Player(pygame.sprite.Sprite):
                     self.position[1] = rect.bottom + self.collision_rect.height
                     self.collision_rect.bottom = self.position[1]       
                     self.velocity[1] = 0
+    
+    def update_x_velocity(self):
+        self.position[0] += self.velocity[0]
+        self.collision_rect.left = self.position[0]
+        
+    def update_y_velocity(self):
+        self.position[1] += self.velocity[1]
+        self.collision_rect.bottom = self.position[1]
         
     def handle_input(self, events, dt):
         keys = pygame.key.get_pressed() 
@@ -182,29 +193,47 @@ class Player(pygame.sprite.Sprite):
                         self.double_jump_ready = False
         '''
                         
+        # Check if the player is holding left and right at the same time
         if keys[pygame.K_LEFT] == True and keys[pygame.K_RIGHT] == True:
             self.animation_state_manager.set_state('idle')
-            self.velocity[0] = 0
+            if self.velocity[0] > 0:
+                self.velocity[0] += self.acceleration * dt
+                if self.velocity[0] < 0:
+                    self.velocity[0] = 0
+            elif self.velocity[0] < 0:
+                self.velocity[0] -= self.acceleration * dt
+                if self.velocity[0] > 0:
+                    self.velocity[0] = 0
 
             for event in events:
                 if event.type == pygame.KEYDOWN:
                     if event.type == pygame.K_LEFT or event.type == pygame.K_RIGHT:
                         self.animationIdle.frame = 0
                     
+        # Check for left key down
         elif keys[pygame.K_LEFT] == True:
             self.animation_state_manager.set_state('run')
             self.reverse = True
-            self.velocity[0] = -SPEED * dt
+            self.velocity[0] -= self.acceleration * dt
+            if self.velocity[0] > 0:
+                self.velocity[0] -= self.acceleration * dt
+            if self.velocity[0] < -self.max_velocity:
+                self.velocity[0] = -self.max_velocity
             
             for event in events:
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_LEFT:
                         self.animation_run.frame = 0
-                        
+             
+        # Check for right key down
         elif keys[pygame.K_RIGHT] == True:
             self.animation_state_manager.set_state('run')
             self.reverse = False
-            self.velocity[0] = SPEED * dt
+            self.velocity[0] += self.acceleration * dt
+            if self.velocity[0] < 0:
+                self.velocity[0] += self.acceleration * dt
+            if self.velocity[0] > self.max_velocity:
+                self.velocity[0] = self.max_velocity
             
             for event in events:
                 if event.type == pygame.KEYDOWN:
@@ -213,7 +242,14 @@ class Player(pygame.sprite.Sprite):
             
         elif keys[pygame.K_LEFT] == False and keys[pygame.K_RIGHT] == False:
             self.animation_state_manager.set_state('idle')
-            self.velocity[0] = 0
+            if self.velocity[0] > 0:
+                self.velocity[0] -= self.acceleration * dt
+                if self.velocity[0] < 0:
+                    self.velocity[0] = 0
+            elif self.velocity[0] < 0:
+                self.velocity[0] += self.acceleration * dt
+                if self.velocity[0] > 0:
+                    self.velocity[0] = 0
             
             for event in events:
                 if event.type == pygame.KEYUP:

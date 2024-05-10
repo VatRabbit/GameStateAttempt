@@ -33,8 +33,19 @@ class enemy(pygame.sprite.Sprite):
         
     # carry out enemy logic, set velocity and direction, and set animation states
     def AI(self, dt, tilemap, TILE_SIZE):
-        self.collision_list = self.check_collisions(TILE_SIZE)
-        grounded = self.check_ground(tilemap, TILE_SIZE)        
+        if self.reverse:
+            self.velocity[0] = dt * SPEED * -1
+        else:
+            self.velocity[0] = dt * SPEED        
+        
+        self.position[0] += self.velocity[0]
+        self.rect.x       = int(self.position[0])
+        self.rect.y       = int(self.position[1]) - (self.rect.height - TILE_SIZE)
+        self.collision_rect.midbottom = self.rect.midbottom
+        self.collision_list = self.check_collisions(TILE_SIZE)        
+        
+        self.reverse_timer += dt
+        grounded = self.check_ground(tilemap, TILE_SIZE)
         
         if self.reverse and self.reverse_timer > self.reverse_cd:
             # all I really need is the y and x coordinates of wall_rect, really. Rect could be a waste
@@ -55,19 +66,8 @@ class enemy(pygame.sprite.Sprite):
                     self.reverse_timer = 0
             if grounded == False:
                 self.reverse = True
-                self.reverse_timer = 0
-                    
-        if self.reverse:
-            self.velocity[0] = dt * SPEED * -1
-        else:
-            self.velocity[0] = dt * SPEED
-        
-        self.reverse_timer += dt
-        self.position[0] += self.velocity[0]
-        self.rect.x       = int(self.position[0])
-        self.rect.y       = int(self.position[1]) - (self.rect.height - TILE_SIZE)
-        self.collision_rect.midbottom = self.rect.midbottom
-        
+                self.reverse_timer = 0        
+                
     # apply velocity to enemy
     def update(self, dt, tilemap, TILE_SIZE):
         self.AI(dt, tilemap, TILE_SIZE)

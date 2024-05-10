@@ -3,7 +3,7 @@ TO ADD:
 - jump buffer
 - variable jump height
 - more optimizion by only rendering visible tiles
-- sound class to load and handout music and sfx
+- audio_handler class to load and handout music and sfx
 - paralax scrolling bg 
 - actual sprites some day
 - use spritegroup functionality for enemies (self.kill() will remove sprites)
@@ -45,13 +45,13 @@ class Game:
         self.events       = []  
 
         self.sprite_handler = sprite_handler.sprite_handler()
-        self.sprite_handler.load_sprites()        
+        self.sprite_handler.load_sprites(SCREEN_WIDTH, SCREEN_HEIGHT)   
 
         self.player = player.Player(self.display, self.sprite_handler.player_idle, self.sprite_handler.player_run, self.sprite_handler.player_jump)
                 
         self.game_state_manager = self.Game_State_Manager('menu')  
         self.menu               = menu.Menu(self.display, self.game_state_manager)
-        self.level              = level.Level(self.display, self.game_state_manager, self.player, TILE_SIZE, SCALED_WIDTH)
+        self.level              = level.Level(self.display, self.game_state_manager, self.player, TILE_SIZE, SCALED_WIDTH, SCREEN_WIDTH, SCREEN_HEIGHT)
         self.states             = {'level': self.level, 'menu': self.menu}
         
     def main_loop(self):
@@ -70,14 +70,14 @@ class Game:
                 self.events.clear()             
               
             if self.render_dt >= 1.0 / RENDER_FPS:                
-                self.render(self.render_dt, self.display)             
+                self.render(self.display)             
                 self.render_dt -= 1.0 / RENDER_FPS
                         
     def update_logic(self):
         self.last_logic = time.time()
         self.states[self.game_state_manager.get_state()].run(self.events, self.logic_dt, self.sprite_handler)  
                                       
-    def render(self, dt, display):  
+    def render(self, display):  
         self.last_render = time.time()         
         self.states[self.game_state_manager.get_state()].render(self.render_dt, display)
         self.scaled_display = pygame.transform.scale(self.display, (display.get_width() * DISPLAY_SCALE, display.get_height() * DISPLAY_SCALE))

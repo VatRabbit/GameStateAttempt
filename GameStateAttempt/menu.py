@@ -17,3 +17,5 @@ class Menu:
             
     def reset(self):
         pass
+if __name__ == '__main__':
+    pass

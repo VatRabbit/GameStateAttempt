@@ -6,13 +6,14 @@ ISSUES:
 
 import pygame
 
-class sprite_handler():
+class sprite_handler:
     def __init__(self):
-        self.load_sprites()
+        pass
         
-    def load_sprites(self):
+    def load_sprites(self, screen_width, screen_height):
         self.load_player_sprites()
         self.load_bunny_sprites()
+        self.load_level_bg_sprites(screen_width, screen_height)
 
     def load_sprite_sheet(self, sprite_sheet, cols, rows):
         sprites = []
@@ -57,6 +58,10 @@ class sprite_handler():
         self.bunny_jump = []
         for sprite in sprites:
             self.bunny_jump.append(pygame.transform.scale(sprite, (24,24)))
+            
+    def load_level_bg_sprites(self, screen_width, screen_height):
+        sprite = pygame.image.load("sprites/back.png").convert_alpha()
+        self.bg_sprite = pygame.transform.scale(sprite, (screen_width, screen_height))
             
 if __name__ == '__main__':
     pass

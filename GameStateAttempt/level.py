@@ -1,7 +1,7 @@
 import pygame, enemy
 
 class Level:
-    def __init__(self, display, game_state_manager, player, tile_size, scaled_width):
+    def __init__(self, display, game_state_manager, player, tile_size, scaled_width, screen_width, screen_height):
         self.display = display
         self.game_state_manager = game_state_manager
         self.player = player                     
@@ -14,6 +14,11 @@ class Level:
         self.camera_follow_multiplyer = 10
         self.TILE_SIZE = tile_size
         self.SCALED_WIDTH = scaled_width
+        
+        self.bg_timer = 0.0
+        self.bg_image = pygame.Surface((screen_width, screen_height))
+        self.bg_rect  = pygame.Rect(0, 0, screen_width, screen_height)
+        
             
         # y then x for these (it's sideways :/ )
         # currently a 28x10 map            
@@ -24,9 +29,9 @@ class Level:
             [1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
             [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,0,0,0,0,1],
             [1,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,1],
-            [1,0,0,1,1,1,0,0,0,0,0,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-            [1,0,0,0,0,0,0,0,0,0,1,1,1,0,0,3,0,0,0,0,0,0,0,0,0,0,0,1],
-            [1,0,0,0,0,0,3,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,1],
+            [1,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,0,0,0,0,0,3,0,0,0,1,1,1,1,1,0,1,0,1,0,1,0,1,1,1,1,1,1],
             [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
         ]
             
@@ -34,11 +39,12 @@ class Level:
         for event in events:
                 if event.type == pygame.KEYUP:
                     if event.key == pygame.K_DELETE:
-                        self.enemy_group.empty()                   
-                        print('del')
+                        self.enemy_group.empty()                                           
                      
         if self.first_run:
-            self.tilemap_rect_list = self.create_tile_rects(sprite_handler, self.display)    
+            self.tilemap_rect_list = self.create_tile_rects(sprite_handler, self.display)
+            self.bg_image = sprite_handler.bg_sprite
+            print(sprite_handler.bg_sprite)
             self.first_run = False                
             
         self.camera()              
@@ -48,8 +54,8 @@ class Level:
         
     def render(self, dt, display):
         display.fill((110, 140, 140))
-        self.render_tiles()                       
-                                
+        self.render_background(dt, self.offset_x)
+        self.render_tiles()     
         for sprite in self.enemy_group:
             sprite.render(self.offset_x, dt)            
         self.enemy_group.draw(display)
@@ -104,6 +110,15 @@ class Level:
                     self.enemy_group.add(new_enemy)
 
         return rect_list
+    
+    def render_background(self, dt, offset_x):
+        # self.bg_timer += dt
+        rect = self.bg_rect.copy()
+        rect.x -= offset_x / 10
+        self.display.blit(self.bg_image, rect)
                 
     def reset(self):
         pass
+    
+if __name__ == '__main__':
+    pass

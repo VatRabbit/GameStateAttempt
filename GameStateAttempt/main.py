@@ -35,13 +35,13 @@ class Game:
         self.display = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))        
         
         self.render_clock = pygame.time.Clock()
-        self.logic_clock  = pygame.time.Clock()
-        self.dt           = 0.0
-        self.render_dt    = 0.0
-        self.logic_dt     = 0.0
+        self.logic_clock  = pygame.time.Clock()        
         self.last_update  = time.time()
         self.last_logic   = time.time()
         self.last_render  = time.time()
+        self.dt           = 0.0
+        self.render_dt    = 0.0
+        self.logic_dt     = 0.0
         self.events       = []  
 
         self.sprite_handler = sprite_handler.sprite_handler()

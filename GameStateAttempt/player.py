@@ -1,23 +1,21 @@
 '''
 TO ADD:
 - jump buffer
-- player should be able to run accross 1 tile gaps without falling 
-- player acceleration and deceleration
+- if player has been running for x time, their top speed can increase
 - need to apply rendering dt to animation states for stability across framerates?
 
 ISSUES:
-- Jumping doesn't work with delta time because it's missing acceleration increments when it misses frames
-
-MISC:
-- Swap out for global variables. They're better for values that can be tweaked
+- Player shouldn't activate jumping animation unitl their fall rate reaches a certain value?
 '''
 
-JUMP                 = -4
-GRAVITY              = 12
-SPEED                = 150
+JUMP                 = -3
+GRAVITY              = 10
+TERMINAL_VELOCITY    = 5
+COYOTE_LIMIT         = 0.1
+ACCELERATION         = 2.5
+MAX_VELOCITY         = 1.25
 ANIMATION_SPEED_RUN  = 14
 ANIMATION_SPEED_IDLE = 8
-ACCERLATION_RATE     = 1
 
 import pygame
 
@@ -45,12 +43,9 @@ class Player(pygame.sprite.Sprite):
         # velocity[0] = left/right, velocity[1] = up/down
         self.velocity     = [0,0]
         self.position     = [0,0]
-        self.acceleration = 2.5
-        self.max_velocity = 1.25
         
         self.last_y              = 0.0        
-        self.terminal_velocity   = 5
-        self.coyote_limit        = 0.1
+        
         self.coyote_time         = 0.0
         self.jump_buffer         = 0.0
         self.jump_height_counter = 0.0
@@ -85,8 +80,8 @@ class Player(pygame.sprite.Sprite):
         
     def apply_gravity(self, dt):
          self.velocity[1] += GRAVITY * dt    
-         if self.velocity[1] > self.terminal_velocity:
-             self.velocity[1] = self.terminal_velocity
+         if self.velocity[1] > TERMINAL_VELOCITY:
+             self.velocity[1] = TERMINAL_VELOCITY
              
     def coyote_counter(self, dt):
         if self.is_grounded == False:
@@ -178,7 +173,7 @@ class Player(pygame.sprite.Sprite):
     def handle_input(self, events, dt):
         keys = pygame.key.get_pressed() 
 
-        if self.is_grounded or self.coyote_time <= self.coyote_limit:
+        if self.is_grounded or self.coyote_time <= COYOTE_LIMIT:
              for event in events:
                  if event.type == pygame.KEYDOWN:
                      if event.key == pygame.K_SPACE:
@@ -197,11 +192,11 @@ class Player(pygame.sprite.Sprite):
         if keys[pygame.K_LEFT] == True and keys[pygame.K_RIGHT] == True:
             self.animation_state_manager.set_state('idle')
             if self.velocity[0] > 0:
-                self.velocity[0] += self.acceleration * dt
+                self.velocity[0] -= ACCELERATION * dt
                 if self.velocity[0] < 0:
                     self.velocity[0] = 0
             elif self.velocity[0] < 0:
-                self.velocity[0] -= self.acceleration * dt
+                self.velocity[0] += ACCELERATION * dt
                 if self.velocity[0] > 0:
                     self.velocity[0] = 0
 
@@ -214,11 +209,11 @@ class Player(pygame.sprite.Sprite):
         elif keys[pygame.K_LEFT] == True:
             self.animation_state_manager.set_state('run')
             self.reverse = True
-            self.velocity[0] -= self.acceleration * dt
+            self.velocity[0] -= ACCELERATION * dt
             if self.velocity[0] > 0:
-                self.velocity[0] -= self.acceleration * dt
-            if self.velocity[0] < -self.max_velocity:
-                self.velocity[0] = -self.max_velocity
+                self.velocity[0] -= ACCELERATION * dt
+            if self.velocity[0] < -MAX_VELOCITY:
+                self.velocity[0] = -MAX_VELOCITY
             
             for event in events:
                 if event.type == pygame.KEYDOWN:
@@ -229,11 +224,11 @@ class Player(pygame.sprite.Sprite):
         elif keys[pygame.K_RIGHT] == True:
             self.animation_state_manager.set_state('run')
             self.reverse = False
-            self.velocity[0] += self.acceleration * dt
+            self.velocity[0] += ACCELERATION * dt
             if self.velocity[0] < 0:
-                self.velocity[0] += self.acceleration * dt
-            if self.velocity[0] > self.max_velocity:
-                self.velocity[0] = self.max_velocity
+                self.velocity[0] += ACCELERATION * dt
+            if self.velocity[0] > MAX_VELOCITY:
+                self.velocity[0] = MAX_VELOCITY
             
             for event in events:
                 if event.type == pygame.KEYDOWN:
@@ -243,11 +238,11 @@ class Player(pygame.sprite.Sprite):
         elif keys[pygame.K_LEFT] == False and keys[pygame.K_RIGHT] == False:
             self.animation_state_manager.set_state('idle')
             if self.velocity[0] > 0:
-                self.velocity[0] -= self.acceleration * dt
+                self.velocity[0] -= ACCELERATION * dt
                 if self.velocity[0] < 0:
                     self.velocity[0] = 0
             elif self.velocity[0] < 0:
-                self.velocity[0] += self.acceleration * dt
+                self.velocity[0] += ACCELERATION * dt
                 if self.velocity[0] > 0:
                     self.velocity[0] = 0
             

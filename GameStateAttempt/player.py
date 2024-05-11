@@ -8,14 +8,15 @@ ISSUES:
 - Player shouldn't activate jumping animation unitl their fall rate reaches a certain value?
 '''
 
-JUMP                 = -3
+JUMP                 = -3.5
 GRAVITY              = 10
 TERMINAL_VELOCITY    = 5
 COYOTE_LIMIT         = 0.1
-ACCELERATION         = 2.5
-MAX_VELOCITY         = 1.25
+ACCELERATION         = 3
+MAX_VELOCITY         = 1.5
 ANIMATION_SPEED_RUN  = 14
 ANIMATION_SPEED_IDLE = 8
+JUMP_BUFFER_LIMIT    = 0.15
 
 import pygame
 
@@ -47,10 +48,12 @@ class Player(pygame.sprite.Sprite):
         self.last_y              = 0.0        
         
         self.coyote_time         = 0.0
-        self.jump_buffer         = 0.0
+        self.jump_buffer         = 1.0
         self.jump_height_counter = 0.0
         self.double_jump_ready   = False
         self.is_grounded         = False
+
+        self.space_bar_released  = True
 
     def update(self, events, dt, tilemap):
         self.handle_input(events, dt)
@@ -124,7 +127,7 @@ class Player(pygame.sprite.Sprite):
         # max of 8
         tollerance = 8
         # this will help player to run over 1-tile gaps
-        y_tollerance = 10
+        y_tollerance = 8
         
         for rect in self.collision_list:
             if rect.colliderect(self.collision_rect):
@@ -172,12 +175,27 @@ class Player(pygame.sprite.Sprite):
         
     def handle_input(self, events, dt):
         keys = pygame.key.get_pressed() 
-
-        if self.is_grounded or self.coyote_time <= COYOTE_LIMIT:
-             for event in events:
-                 if event.type == pygame.KEYDOWN:
-                     if event.key == pygame.K_SPACE:
-                         self.velocity[1] = JUMP
+        
+        # Handles jumping        
+        for event in events:
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_SPACE:
+                    self.space_bar_released = True
+                    
+        if self.space_bar_released and keys[pygame.K_SPACE] == True:            
+            self.jump_buffer = 0
+            self.space_bar_released = False
+        
+        if self.jump_buffer < JUMP_BUFFER_LIMIT:            
+            if self.is_grounded or self.coyote_time < COYOTE_LIMIT:
+                self.velocity[1] = JUMP
+                self.jump_buffer += 1
+                self.coyote_time += 1           
+        
+        if self.jump_buffer < 0.15:
+            self.jump_buffer += dt
+        else:
+            self.jump_buffer = 0.15
                          
         '''
         elif self.double_jump_ready == True:
@@ -234,15 +252,16 @@ class Player(pygame.sprite.Sprite):
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_RIGHT:
                         self.animation_run.frame = 0
-            
+                        
+        # Check if left and right are both up            
         elif keys[pygame.K_LEFT] == False and keys[pygame.K_RIGHT] == False:
             self.animation_state_manager.set_state('idle')
             if self.velocity[0] > 0:
-                self.velocity[0] -= ACCELERATION * dt
+                self.velocity[0] -= ACCELERATION * dt * 1.5
                 if self.velocity[0] < 0:
                     self.velocity[0] = 0
             elif self.velocity[0] < 0:
-                self.velocity[0] += ACCELERATION * dt
+                self.velocity[0] += ACCELERATION * dt * 1.5
                 if self.velocity[0] > 0:
                     self.velocity[0] = 0
             

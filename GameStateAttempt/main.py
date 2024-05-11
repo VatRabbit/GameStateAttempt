@@ -18,13 +18,15 @@ ISSUES:
 import pygame, time, player, level, menu, sprite_handler
 from sys import exit
 
+# this is an issue
+DISPLAY_SCALE = 2
+
 RENDER_FPS    = 90
 LOGIC_FPS     = 120
 MAP_FPS       = 120
 TILE_SIZE     = 16
-DISPLAY_SCALE = 2
-SCREEN_WIDTH  = 448
-SCREEN_HEIGHT = 320
+SCREEN_WIDTH  = 682
+SCREEN_HEIGHT = 384
 SCALED_WIDTH  = SCREEN_WIDTH / DISPLAY_SCALE
 SCALED_HEIGHT = SCREEN_HEIGHT / DISPLAY_SCALE
 
